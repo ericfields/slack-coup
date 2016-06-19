@@ -1,0 +1,3 @@
+class ValidationError < StandardError
+
+end

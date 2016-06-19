@@ -1,0 +1,3 @@
+class GameError < StandardError
+
+end

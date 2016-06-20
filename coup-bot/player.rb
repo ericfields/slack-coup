@@ -6,10 +6,9 @@ class Player
 	attr_reader :cards
 	attr_reader :coins
 
-	def initialize(game, id, name)
+	def initialize(game, user)
 		@game = game
-		@id = id
-		@name = name
+		@user = user
 
 		@cards = []
 		@max_cards = 2
@@ -24,7 +23,7 @@ class Player
 
 	def lose_coins(amount)
 		if @coins == 0
-			raise PlayerError, "target does not have any coins"
+			raise ValidationError, "target does not have any coins"
 		elsif @coins < amount
 			amount = @coins
 		end
@@ -49,7 +48,11 @@ class Player
 		card.flip
 	end
 
+	def ==(other_player)
+		other_player.user == self.user
+	end
+
 	def to_s
-		@name
+		@user.name
 	end
 end

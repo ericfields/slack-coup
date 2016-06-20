@@ -1,26 +1,31 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
-Slack.config.token = ENV['SLACK_API_TOKEN']
+#Slack.config.token = ENV['SLACK_API_TOKEN']
+
+SlackRubyBot.configure do |c|
+	c.token = ENV['SLACK_API_TOKEN']
+end
 
 require 'slack-ruby-bot'
 
 require 'game'
 require 'player'
 require 'errors'
-require 'users'
+require 'user'
 
-#SlackRubyBot::Client.logger.level = Logger::WARN
+SlackRubyBot::Client.logger.level = Logger::INFO
 
 class CoupBot < SlackRubyBot::Bot
-	include Users
-
 	@game = nil
 	@channel = nil
 
 	@actions = ['income', 'tax', 'foreign aid']
 
-	match '(?<action>\w+)' do |client, data, match|
+	match "(?<action>#{@actions.join('|')})" do |client, data, match|
 		player = get_player(data.user)
+		if player.nil?
+			client.say text: "You're not in the game. If you want to join the game, just type 'join'. Otherwise fuck off.", channel: data.channel
+		end
 
 		action_class = Object.const_get(match[:action].capitalize)
 		action = action_class.new(player)
@@ -29,21 +34,24 @@ class CoupBot < SlackRubyBot::Bot
 
 	match 'lobby' do |client, data, match|
 		if data.channel[0] == 'D'
-			client.say text: "Cannot start a lobby in a direct message channel. Run this command in a general Slack channel.", channel: data.channel
+			client.say text: "You can't start a lobby in a direct message channel, dumbass. Run this command in a general Slack channel.", channel: data.channel
 			next
 		end
 
 		if @game
 			if @game.started?
-				client.say text: "There is already a game under way.\n\nPlayers:\n\n#{@game.player_list}", channel: data.channel
+				client.say text: "There is already a game under way, you loser.\n\nPlayers:\n\n#{@game.player_list}", channel: data.channel
 			else
-				client.say text: "A lobby for Coup is already open.\n\nPlayers:\n\n#{@game.player_list}", channel: data.channel
+				client.say text: "A lobby for Coup is already open, so shut up.\n\nPlayers:\n\n#{@game.player_list}", channel: data.channel
 			end
 			next
 		end
 
+		client.say text: "Starting up a Coup lobby...", channel: data.channel
+
 		@channel = data.channel
 		@game = Game.new(data.channel)
+		User.load_members(data.channel)
 		@game.add_player data.user
 
 		client.say text: "A new lobby for a game of Coup has been opened.\n\nPlayers:\n\n#{@game.player_list}", channel: data.channel
@@ -62,13 +70,6 @@ class CoupBot < SlackRubyBot::Bot
 			
 			client.say text: "A game of Coup has started!", channel: data.channel
 			client.say text: "Play order:\n#{@game.player_list}", channel: data.channel
-
-			@game.players.each do |player|
-				user = player.user
-				dm_channel = user
-				dm_channel[0] = 'D'
-
-			end
 		end
 	end
 
@@ -118,27 +119,35 @@ class CoupBot < SlackRubyBot::Bot
 		client.say text: "This game of Coup has ended.", channel: data.channel
 	end
 
-	def get_player(user)
-		player = @game.players[user]
-		if player.nil?
-			raise CommandError, "Player is not in the game"
+	class << self
+		def get_player(user)
+			@game.players[user]
 		end
-		player
-	end
 
-	def add_player(user)
-		@game.add_player user
-	end
+		def add_player(user)
+			@game.add_player user
+		end
 
-	def remove_player(user)
-		removed_player = @game.remove_player user
-		if removed_player.nil?
-			raise CommandError, "#{subject} not in the game."
+		def remove_player(user)
+			removed_player = @game.remove_player user
+			if removed_player.nil?
+				raise CommandError, "#{subject} not in the game."
+			end
+		end
+
+		def end_game
+			@game = nil
 		end
 	end
+end
 
-	def end_game
-		@game = nil
+class CoupBotServer < SlackRubyBot::Server
+	on 'message' do |client, data|
+		if data.subtype == 'channel_join'
+			User.cache_user data.user
+		elsif data.subtype == 'channel_leave'
+			User.uncache_user data.user
+		end
 	end
 end
 

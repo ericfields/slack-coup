@@ -6,27 +6,18 @@ class CommandError < CoupError
 
 end
 
-class PlayerError < CoupError
-	attr_accessor :player
-
-	def initialize(player, msg)
-		@player = player
-		@msg = msg
-	end
-end
-
 class ValidationError < CoupError
 
 end
 
-class SetupError < StandardError
+class InternalError < StandardError
 
 end
 
-class CallError < SetupError
+class CallError < InternalError
 
 end
 
-class ConfigError < SetupError
+class ConfigError < InternalError
 
 end

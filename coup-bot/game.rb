@@ -1,4 +1,4 @@
-require 'users'
+require 'user'
 require 'actions'
 require 'cards'
 require 'errors'
@@ -6,7 +6,6 @@ require 'player'
 require 'patches'
 
 class Game
-	include Users
 
 	attr_accessor :players
 	attr_accessor :deck
@@ -28,9 +27,9 @@ class Game
 		end
 	end
 
-	def add_player(user)
-		name = name_for(user)
-		@players[user] = Player.new(self, user, name)
+	def add_player(user_id)
+		user = User.find(user_id)
+		@players[user_id] = Player.new(self, user)
 	end
 
 	def remove_player(user)
@@ -38,7 +37,7 @@ class Game
 	end
 
 	def player_list
-		@players.values.collect{|player| player.name}.join("\n")
+		@players.values.join("\n")
 	end
 
 	def start
@@ -46,9 +45,9 @@ class Game
 		
 		@players = Hash[@players.to_a.shuffle] # Randomize the order of players
 
-		players.each do |player|
+		players.values.each do |player|
 			2.times do
-				player.take_card @deck.shift
+				player.gain_card
 			end
 		end
 

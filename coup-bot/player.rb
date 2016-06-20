@@ -1,5 +1,4 @@
-require 'user'
-require 'errors/player_error'
+require 'errors'
 
 class Player
 	attr_reader :id
@@ -7,10 +6,10 @@ class Player
 	attr_reader :cards
 	attr_reader :coins
 
-	def initialize(game, user)
+	def initialize(game, id, name)
 		@game = game
-		@id = user
-		@name = User.name_for(user)
+		@id = id
+		@name = name
 
 		@cards = []
 		@max_cards = 2

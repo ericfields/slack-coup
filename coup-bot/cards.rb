@@ -23,7 +23,7 @@ class Card
 	    @@card_classes ||= ObjectSpace.each_object(singleton_class).select { |klass| klass < self }
 	    @@card_classes.select do |klass|
 	    	klass.actions.include? action
-	    do
+	    end
 	  end
 
 	  def blockers(action)
@@ -31,7 +31,7 @@ class Card
 	    @@card_classes ||= ObjectSpace.each_object(singleton_class).select { |klass| klass < self }
 	    @@card_classes.select do |klass|
 	    	klass.blocks.include? action
-	    do
+	    end
 	  end
 	end
 

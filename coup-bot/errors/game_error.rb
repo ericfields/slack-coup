@@ -1,3 +1,0 @@
-class GameError < StandardError
-
-end

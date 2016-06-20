@@ -1,14 +1,19 @@
+require 'users'
+require 'actions'
 require 'cards'
+require 'errors'
 require 'player'
-require 'user'
-
-require 'errors/player_error'
+require 'patches'
 
 class Game
+	include Users
+
 	attr_accessor :players
 	attr_accessor :deck
 
 	attr_reader :started
+
+	attr_accessor :current_action
 
 	def initialize(channel)
 		@channel = channel
@@ -21,13 +26,11 @@ class Game
 				@deck.push role_class.new
 			end
 		end
-
-		# Reload all user info
-		User.load_users(true)
 	end
 
 	def add_player(user)
-		@players[user] = Player.new(self, user)
+		name = name_for(user)
+		@players[user] = Player.new(self, user, name)
 	end
 
 	def remove_player(user)

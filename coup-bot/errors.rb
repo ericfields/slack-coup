@@ -18,3 +18,15 @@ end
 class ValidationError < CoupError
 
 end
+
+class SetupError < StandardError
+
+end
+
+class CallError < SetupError
+
+end
+
+class ConfigError < SetupError
+
+end

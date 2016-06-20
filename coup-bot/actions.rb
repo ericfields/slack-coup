@@ -5,12 +5,12 @@ require 'errors'
 class Response
 	attr_accessor :public_message
 	attr_reader :private_message
-	attr_reader :callbacks
+	attr_reader :callback
 
-	def initialize(public_message, private_message = nil, callbacks = [])
+	def initialize(public_message, private_message = nil, callback = nil)
 		@public_message = public_message
 		@private_message = private_message
-		@callbacks = callbacks
+		@callback = callback
 	end
 end
 
@@ -44,8 +44,18 @@ class Action
 			@on_perform = block
 		end
 
-		def respond(message = nil, private: nil, callbacks: [])
-			return Response.new(message, private, callbacks)
+		def on_callback(&block)
+			@on_callback = block
+		end
+
+		def respond(message = nil, private: nil, callback: nil)
+			return Response.new(message, private, callback)
+		end
+	end
+
+	def validate(*args)
+		if self.class.on_validate.nil?	
+			self.class.on_validate.call(@player, *args)
 		end
 	end
 
@@ -67,11 +77,12 @@ class Action
 		response
 	end
 
-	def validate(*args)
-		if self.class.on_validate.nil?	
-			self.class.on_validate.call(@player, *args)
+	def callback(*args)
+		if @on_callback
+			self.class.on_callback.call(*args)
+		else
+			raise ConfigError, "Action '#{self.class}' does not handle callbacks"
 		end
-		true
 	end
 
 	def blockable?
@@ -120,7 +131,21 @@ class Exchange < Action
 
 	on_perform do |player|
 		respond "#{player}'s exchange will proceed",
-			callbacks: [Pickup.new(player, 2), Return.new(player, 2)]
+			callback: Pickup.new(player, 2)
+	end
+
+	on_callback do |callback_action, *cards|
+		player = callback_action.player
+		if callback_action.is_a? Pickup
+			cards = callback_action.perform
+			respond "#{player} has taken #{cards.count} card(s) from the deck",
+				private: "You've taken #{callback_action.count} card(s) from the deck: #{cards.and_join}",
+				callback: Return.new(player, 2)
+		elsif callback_action.is_a? Return
+			cards = callback_action.perform(*cards)
+			respond "#{player} returned #{cards.count} card(s) to the deck",
+				private: "You have put back the #{cards.and_join} card(s)"
+		end
 	end
 end
 
@@ -174,7 +199,12 @@ class Assassinate < TargetedAction
 
 	on_perform do |player, target|
 		respond "#{player}'s assassination will proceed!",
-			callbacks: [Flip.new(target, 1)]
+			callback: Flip.new(target, 1)
+	end
+
+	on_callback do |player, target, callback_action, card|
+		card = callback_action.perform card
+		respond "#{callback_action.player} has flipped the #{card} card!"
 	end
 end
 
@@ -183,7 +213,12 @@ class Coup < TargetedAction
 
 	on_perform do |player, target|
 		respond "#{player}'s coup will proceed!",
-			callbacks: [Flip.new(target, 1)]
+			callback: Flip.new(target, 1)
+	end
+
+	on_callback do |player, target, callback_action, card|
+		card = callback_action.perform card
+		respond "#{callback_action.player} has flipped the #{card} card!"
 	end
 end
 
@@ -201,8 +236,6 @@ class Pickup < CardAction
 		@count.times do
 			cards.push player.gain_card
 		end
-		respond "#{player} has taken #{@count} card(s) from the deck",
-			private: "You've taken #{@count} card(s) from the deck: #{cards.and_join}\n"
 	end
 end
 
@@ -211,8 +244,6 @@ class Return < CardAction
 		cards.each do |card|
 			player.lose_card card
 		end
-		respond "#{player} returned #{cards.count} card(s) to the deck",
-			private: "You have put back the #{cards.and_join} card(s)"
 	end
 end
 
@@ -225,7 +256,6 @@ class Flip < CardAction
 
 	on_perform do |player, card|
 		player.cards.find{|c| c.is_a? card.class}.flip
-		respond "#{player} has revealed the #{card} card!"
 	end
 end
 
@@ -247,6 +277,18 @@ class Reaction < Action
 		end
 		true
 	end
+
+	def begin(*args)
+		super(@player, @action, *args)
+	end
+
+	def perform(*args)
+		super(@player, @action, *args)
+	end
+
+	def callback(*args)
+		super(@player, @action, *args)
+	end
 end
 
 class Block < Reaction
@@ -266,16 +308,27 @@ class Challenge < Reaction
 
 	on_begin do |player, action|
 		respond "#{player} has challenged #{action.player}'s #{action}! #{action.player}, please reveal a card with 'flip <card>'",
-		callbacks: [Flip.new(@player, 1)]
+		callback: Flip.new(@player, 1)
 	end
 
-	on_perform do |player, action, card|
-		if @action.class.actors.include? card.class
-			respond "#{@player}'s challenge has succeeded! #{@action.player} must flip a card",
-				callbacks: [Flip.new(@action.player, 1)]
-		else
-			respond "#{@player}'s challenge has failed! #{player} must flip a card",
-				callbacks: [Flip.new(@player, 1), Return.new(@target, 1)]
+	on_callback do |player, action, callback_action, card|
+		card = callback_action.perform(card)
+
+		if callback_action.is_a? Flip
+			response_str "#{player} has revealed the #{card} card!\n"
+			if callback_action.player == action.player
+				respond response_str, callback: Return.new(action.player, 1)
+			else 
+				if action.class.actors.include? card.class
+					respond respones_str + "#{player}'s challenge has succeeded! #{action.player} has lost the #{card} card"
+				else
+					respond respones_str + "#{player}'s challenge has failed! #{player} must flip a card",
+						callback: Flip.new(player, 1)
+				end
+			end
+		elsif callback_action.is_a? Return
+			respond "#{callback_action.player} has returned a card to the deck",
+				private: "You returned the #{card} card to the deck"
 		end
 	end
 end

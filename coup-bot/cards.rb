@@ -1,4 +1,6 @@
-require 'actions'
+require 'play_actions'
+require 'targeted_actions'
+require 'reactions'
 
 class Card
 	@@card_classes = []
@@ -35,11 +37,17 @@ class Card
 	  end
 	end
 
-	attr_reader :flipped
+	def initialize
+		@flipped = false
+	end
 
 	def flip
 		@flipped = true
 		self
+	end
+
+	def flipped?
+		@flipped
 	end
 
 	def hide

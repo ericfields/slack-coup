@@ -10,11 +10,17 @@ class Array
 		end
 	end
 
+	alias_method :to_s_orig, :to_s
+
 	def to_s
 		natural_join("and")
 	end
 
-	def or
+	def or_join
 		natural_join("or")
+	end
+
+	def show
+		'[' + join(', ') + ']'
 	end
 end

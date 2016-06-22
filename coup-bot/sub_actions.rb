@@ -1,17 +1,10 @@
-require 'actions'
+require 'action'
 
 class SubAction < Action
-	attr_reader :params
 
-	def initialize(player, prompt: true, params: nil)
+	def initialize(player, prompt = false)
 		super(player)
 		@prompt = prompt
-		@params = params
-	end
-
-	def do
-		result = evaluate
-		respond message: public_message(result)
 	end
 
 	def prompt?
@@ -24,53 +17,64 @@ class SubAction < Action
 end
 
 class GainCoins < SubAction
-	def initialize(player, count)
-		super(player, prompt: false)
+	def initialize(player, count = nil)
+		super(player)
 		@count = count
 	end
 
-	def public_message(result)
-		"#{player} has gained "
+	def public_message(coins)
+		"#{player} has received #{coins} coin(s)"
 	end
 
-	def evaluate
+	def evaluate(count = nil)
+		@count ||= count
 		@player.gain_coins @count
 	end
 end
 
 class LoseCoins < SubAction
-	def initialize(player, count)
-		super(player, prompt: false)
+	def initialize(player, count = nil)
+		super(player)
 		@count = count
 	end
 
-	def evaluate
-		result = @player.lose_coins @count
-		respond result: result
+	def evaluate(count = nil)
+		@count ||= count
+		@player.lose_coins @count
+	end
+
+	def public_message(coins)
+		"#{player} has lost #{coins} coins"
 	end
 end
 
 class PickUp < SubAction
-	def initialize(player, count)
-		super(player, prompt: false)
+	def initialize(player, count = nil)
+		super(player)
 		@count = count
 	end
 
-	def evaluate
-		cards = (1..@count).collect do
+	def evaluate(count = nil)
+		@count ||= (count.is_a?(Enumerable) ? count.count : count)
+		(1..@count).collect do
 			@player.gain_card
 		end
-		respond result: cards,
-			message: "#{player} picked up #{cards.count} card(s)",
-			private: "You picked up the #{cards} card(s)"
+	end
+
+	def public_message(cards)
+		"#{player} picked up #{cards.count} card(s)"
+	end
+
+	def private_message(cards)
+		"You picked up the #{cards} card(s)"
 	end
 end
 
 class Return < SubAction
 	attr_reader :cards
 
-	def initialize(player, cards, prompt: true)
-		super(player, prompt: prompt)
+	def initialize(player, cards, prompt: false)
+		super(player, prompt)
 		if cards.is_a? Number
 			@cards = Array.new(cards)
 		else
@@ -91,6 +95,14 @@ class Return < SubAction
 		end
 	end
 
+	def public_message(cards)
+		"#{player} returend #{cards.count} card(s) to the deck"
+	end
+
+	def private_message(cards)
+		"You returned the #{cards} card(s) to the deck"
+	end
+
 	def ==(other)
 		super(other) && other.cards.count == cards.count
 	end
@@ -98,7 +110,7 @@ end
 
 class Flip < SubAction
 	def initialize(player)
-		super(player, prompt: true)
+		super(player, true)
 	end
 
 	def validate(card)
@@ -107,5 +119,9 @@ class Flip < SubAction
 
 	def evaluate(card)
 		player.flip_card card
+	end
+
+	def public_message(card)
+		"#{player} revealed the #{card} card!"
 	end
 end

@@ -27,11 +27,7 @@ class User
 		# Find a user by name
 		def with_name(user_name)
 			@user_cache ||= {}
-			user = @user_cache.values.find{|u| u.name == user_name}
-			if user.nil?
-				raise CommandError, "#{user_name} is not a member of the channel for the current game"
-			end
-			user
+			@user_cache.values.find{|u| u.name == user_name}
 		end
 
 		def load_client
@@ -57,6 +53,10 @@ class User
 			@user_cache ||= {}
 			@user_cache[user_id] = user
 			user
+		end
+
+		def all_users
+			@user_cache.values
 		end
 
 		def uncache_user(user_id)

@@ -1,8 +1,7 @@
 require 'errors'
 
 class Player
-	attr_reader :id
-	attr_reader :name
+	attr_reader :user
 	attr_reader :cards
 	attr_reader :coins
 
@@ -11,9 +10,9 @@ class Player
 		@user = user
 
 		@cards = []
-		@max_cards = 2
+		@coins = 2
 
-		@coins = 0
+		@eliminated = false 
 	end
 
 	def gain_coins(amount)
@@ -63,8 +62,20 @@ class Player
 		@cards.find{|c| c == card}.flip
 	end
 
+	def remaining_cards
+		@cards.count{|c| ! c.flipped? }
+	end
+
+	def eliminate
+		@eliminated = true
+	end
+
+	def eliminated?
+		@eliminated
+	end
+
 	def ==(other_player)
-		other_player.user == self.user
+		other_player.user.id == self.user.id
 	end
 
 	def to_s

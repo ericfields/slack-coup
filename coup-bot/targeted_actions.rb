@@ -1,3 +1,4 @@
+require 'play_actions'
 require 'errors'
 
 class TargetedAction < PlayAction
@@ -14,7 +15,7 @@ end
 
 class Steal < TargetedAction
 	def subactions
-		[LoseCoins.new(target, 2), GainCoins.new(player, 2)]
+		[LoseCoins.new(target, 2), GainCoins.new(player)]
 	end
 
 	def validate
@@ -33,7 +34,7 @@ class Assassinate < TargetedAction
 	end
 
 	def validate
-		if target.cards.count{|c| ! c.flipped? } < 1
+		if target.remaining_cards < 1
 			raise ValidationError, "You cannot assassinate #{target} - they are out of the game."
 		end
 	end

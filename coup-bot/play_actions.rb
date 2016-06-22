@@ -1,4 +1,4 @@
-require 'subactinos'
+require 'sub_actions'
 
 class PlayAction < Action
 	def initialize(player)
@@ -6,8 +6,7 @@ class PlayAction < Action
 		@subactions = []
 	end
 
-	def do
-		respond evaluate
+	def validate
 	end
 
 	def subactions
@@ -15,7 +14,7 @@ class PlayAction < Action
 	end
 
 	def public_message(result)
-		"#{player}'s #{self} has completed"
+		"#{player}'s #{self} action has completed."
 	end
 end
 
@@ -31,8 +30,15 @@ class ForeignAid < PlayAction
 	end
 end
 
+class Tax < PlayAction
+	def subactions
+		[GainCoins.new(player, 3)]
+	end
+end
+
 class Exchange < PlayAction
 	def subactions
-		[PickUp.new(2), Return.new(2, prompt: true)]
+		cards_to_exchange = player.remaining_cards
+		[PickUp.new(cards_to_exchange), Return.new(cards_to_exchange, prompt: true)]
 	end
 end

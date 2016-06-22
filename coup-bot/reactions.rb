@@ -1,3 +1,5 @@
+require 'play_actions'
+
 class Reaction < PlayAction
 	attr_reader :action
 
@@ -17,19 +19,13 @@ class Challenge < Reaction
 	end
 
 	def evaluate(card)
-		succeeded = false
-		if action.is_a? Block
-			if action.blockers.include? card.class
-			else
-				succeeded = true
-			end
+		if action.is_a?(Block) && ! action.blockers.include?(card.class)
+			false
+		elsif ! action.actors.include?(card.class)
+			false
 		else
-			if action.actors.include? card.class
-			else
-				succeeded = true
-			end
+			true
 		end
-		succeeded
 	end
 
 	def do(card)
@@ -45,7 +41,7 @@ class Challenge < Reaction
 			result = nil
 		end
 
-		respond result: result, message: message, new_actions: new_actions
+		respond result, message: message, new_actions: new_actions
 	end
 end
 

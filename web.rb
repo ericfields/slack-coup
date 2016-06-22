@@ -1,5 +1,5 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
-require 'coup-bot'
+require 'slack-coup-bot'
 
 CoupBot.run

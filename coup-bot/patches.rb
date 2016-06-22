@@ -10,10 +10,11 @@ class Array
 		end
 	end
 
-	def and_join
+	def to_s
 		natural_join("and")
 	end
-	def or_join
+
+	def or
 		natural_join("or")
 	end
 end

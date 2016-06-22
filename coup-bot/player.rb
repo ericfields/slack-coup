@@ -37,15 +37,30 @@ class Player
 		card
 	end
 
-	def lose_card
-		card = @cards.delete
-		@game.deck.push card
-		@game.deck.shuffle
-		card
+	def lose_card(card)
+		card_index = @cards.index_of card
+		if card_index
+			card = @cards.delete_at card_index
+			card.hide
+			@game.deck.push card
+			@game.deck.shuffle
+			card
+		else
+			nil
+		end
+	end
+
+	def has_cards?(*cards)
+		unmatched_cards = cards.clone
+		@cards.each do |card|
+			card_index = unmatched_cards.index card
+			unmatched_cards.delete_at(card_index) if card_index
+		end
+		unmatched_cards.empty?
 	end
 
 	def flip_card(card)
-		card.flip
+		@cards.find{|c| c == card}.flip
 	end
 
 	def ==(other_player)

@@ -39,10 +39,16 @@ class Card
 
 	def flip
 		@flipped = true
+		self
 	end
 
 	def hide
 		@flipped = false
+		self
+	end
+
+	def ==(other)
+		other.class == self.class
 	end
 
 	def to_s

@@ -29,7 +29,7 @@ module SlackCoupBot
 
 				start_game
 
-				client.say text: "A game of Coup has been started!\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
+				client.say text: "A game of Coup has been started!\n\nPlayers:\n\n#{game.player_list}\n\nIt is #{game.current_player}'s turn.", channel: data.channel
 			end
 
 			match 'coup lobby' do |client, data, match|

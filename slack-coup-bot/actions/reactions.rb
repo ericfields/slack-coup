@@ -26,7 +26,7 @@ module SlackCoupBot
 				"#{player}'s #{self} succeeds!"
 			end
 
-			def evaluate
+			def evaluate(*args)
 				Cancel.new(action)
 			end
 		end
@@ -54,7 +54,7 @@ module SlackCoupBot
 
 			def evaluate(card)
 				if action.is_a?(Block)
-					if card.blocks?(action)
+					if card.blocks?(action.action)
 						return false
 					end
 				elsif card.acts?(action)

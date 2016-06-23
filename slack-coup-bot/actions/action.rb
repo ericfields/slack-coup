@@ -8,6 +8,7 @@ module SlackCoupBot
 
 			def initialize(player)
 				@player = player
+				@logger = SlackRubyBot::Client.logger
 			end
 
 			def respond(result: nil, message: nil, private: nil, new_actions: [])

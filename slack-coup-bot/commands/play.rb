@@ -30,6 +30,8 @@ module SlackCoupBot
 					raise CommandError, "Another action is currently in progress, #{player}"
 				end
 
+				check_coup(player)
+
 				action = class_for_action(match[:action]).new(player)
 
 				action.validate
@@ -85,6 +87,8 @@ module SlackCoupBot
 				if player != game.current_player
 					raise CommandError, "It is not your turn, #{player}!"
 				end
+
+				check_coup(player)
 
 				if game.current_player_action
 					raise CommandError, "Another action is currently in progress, #{player}"
@@ -236,11 +240,16 @@ module SlackCoupBot
 
 						# Check if action requires user input
 						if game.current_action.is_a? Actions::SubAction
-							if game.current_action.prompt && user_input.nil?
-								logger.info "User input is required for #{game.current_action} action, notifying #{game.current_action.player}"
-								# Stop exeucting stack and wait for user to provide input
-								print_response game.current_action.prompt
-								return false
+							if game.current_action.prompt
+								if user_input.nil?
+									logger.info "User input is required for #{game.current_action} action, notifying #{game.current_action.player}"
+									# Stop exeucting stack and wait for user to provide input
+									print_response game.current_action.prompt
+									return false
+								else
+									logger.info "Subaction #{game.current_action} received user input #{user_input}"
+									user_input = nil
+								end
 							end
 						end
 
@@ -278,6 +287,12 @@ module SlackCoupBot
 
 						game.end_execution
 						true
+					end
+				end
+
+				def check_coup(player)
+					if player.coins >= 10
+						raise CommandError, "#{player} has more than 10 coins. #{player} must coup!"
 					end
 				end
 
@@ -327,9 +342,10 @@ module SlackCoupBot
 					else
 						game.advance
 						self.client.say text: "It is now #{game.current_player}'s turn to act", channel: self.channel
+						if game.current_player.coins >= 10
+							self.client.say text: "#{game.current_player} has 10 coins...#{game.current_player} must coup!", channel: self.channel
+						end
 					end
-
-					logger.info ""
 				end
 
 				def countdown(action)

@@ -87,7 +87,7 @@ module SlackCoupBot
 
 				# Check if action is blockable
 				if ! game.current_action.blockable?
-					raise CommandError, "Cannot #{reacion} a #{game.current_action}"
+					raise CommandError, "Cannot block a #{game.current_action}"
 				end
 
 				# Check if this player can block

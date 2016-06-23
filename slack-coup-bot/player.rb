@@ -10,7 +10,7 @@ class Player
 		@user = user
 
 		@cards = []
-		@coins = 2
+		@coins = 0
 
 		@eliminated = false 
 	end
@@ -51,7 +51,7 @@ class Player
 
 	def has_cards?(*cards)
 		unmatched_cards = cards.clone
-		@cards.each do |card|
+		remaining_cards.each do |card|
 			card_index = unmatched_cards.index card
 			unmatched_cards.delete_at(card_index) if card_index
 		end

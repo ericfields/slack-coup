@@ -24,9 +24,15 @@ module SlackCoupBot
 	class Bot < SlackRubyBot::Bot
 		extend State
 
-		self.wait_time = 5
-		self.action_pause = 0.5
+		self.reaction_time = 5
+		self.action_pause = 0
 		self.logger = SlackRubyBot::Client.logger
+
+		self.debug_options = {
+			coins_per_player: 7, 
+			shuffle_deck: false, 
+			shuffle_players: false
+		}
 	end
 
 	class Server < SlackRubyBot::Server

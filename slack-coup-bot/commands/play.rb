@@ -28,7 +28,7 @@ module SlackCoupBot
 					raise CommandError, "It is not your turn, #{player}!"
 				end
 
-				if game.current_action
+				if game.current_player_action
 					raise CommandError, "Another action is currently in progress, #{player}"
 				end
 
@@ -42,7 +42,7 @@ module SlackCoupBot
 				sleep action_pause
 				client.say text: "#{player} will take #{action}!", channel: data.channel
 
-				Thread.new do
+				async do
 					should_do = true
 
 					if action.blockable? || action.challengable?
@@ -90,7 +90,7 @@ module SlackCoupBot
 					raise CommandError, "It is not your turn, #{player}!"
 				end
 
-				if game.current_action
+				if game.current_player_action
 					raise CommandError, "Another action is currently in progress, #{player}"
 				end
 
@@ -114,7 +114,7 @@ module SlackCoupBot
 				sleep action_pause
 				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
 
-				Thread.new do
+				async do
 					should_do = true
 
 					if action.blockable? || action.challengable?
@@ -135,16 +135,12 @@ module SlackCoupBot
 				end
 			end
 
-			match 'block' do |client, data|
+			match /(?<reaction>block|challenge)/ do |client, data, match|
 				if data.channel[0] == 'D'
 					raise CommandError, "Please perform this action in a regular channel, not as a direct message"
 				end
 
-				if game.nil?
-					raise CommandError, "A game of Coup has not been created. To create a Coup lobby, say 'lobby'"
-				elsif ! game.started?
-					raise CommandError, "The game has not yet started"
-				end
+				next if game.nil? || !game.started?
 
 				player = get_player(data.user)
 				if player.nil?
@@ -153,32 +149,26 @@ module SlackCoupBot
 					raise CommandError, "You have already been eliminated from the game, #{player}."
 				end
 
-				reaction = class_for_action('block').new(player, game.current_action)
+				reaction = class_for_action(match[:reaction]).new(player, game.current_player_action)
 
-				if game.current_action.nil?
+				if game.executing?
+					raise CommandError, "You can no longer #{reaction} #{game.current_player_action.player}'s #{game.current_player_action}. #{game.current_action.player} must #{game.current_action}."
+				elsif game.current_player_action.nil?
 					raise CommandError, "There is no action to #{reaction}"
-				elsif game.current_action == reaction
-					raise CommandError, "A #{game.current_action} has already been initiated"
-				elsif game.current_action.player == player
-					raise CommandError, "You cannot #{reaction} your own #{game.current_action}"
+				elsif game.current_player_action == reaction
+					raise CommandError, "A #{game.current_player_action} has already been initiated"
+				elsif game.current_player_action.player == player
+					raise CommandError, "You cannot #{reaction} your own #{game.current_player_action}"
 				end
 
-				# Check if action is blockable
-				if ! game.current_action.blockable?
-					raise CommandError, "Cannot block a #{game.current_action}"
-				end
-
-				# Check if this player can block
-				if game.current_action.is_a?(Actions::TargetedAction) && player != game.current_action.target
-					raise CommandError, "Only #{game.current_action.target} can #{reaction} this action"
-				end
+				reaction.validate
 
 				sleep action_pause
 				client.say text: "#{player} will #{reaction}!", channel: data.channel
 
 				load_action reaction
 
-				Thread.new do
+				async do
 
 					if countdown(reaction)
 						execute_stack
@@ -189,39 +179,104 @@ module SlackCoupBot
 				end
 			end
 
-			match 'cards' do |client, data|
-				player = check_player(data.user)
+			match /(?<subaction>flip|return)( (?<cards>[\w\s]+))?/ do |client, data, match|
+				next if game.nil? || !game.started?
+
+				player = get_player(data.user)
+				next if player.nil? || player.eliminated?
+
+				if match[:cards].nil?
+					raise CommandError, "You must specify one or more cards to #{match[:subaction]}"
+				end
+
+				card_names = match[:cards].split(' ')
+				cards = card_names.collect do |card_name|
+					class_for_card(card_name).new
+				end
+
+				subaction = class_for_action(match[:subaction]).new(player, cards)
+				if subaction != game.current_action
+					raise CommandError, "Now is not the time to #{subaction}, #{player}"
+				end
+
+				subaction.validate *cards
+
+				execute_stack(cards)
+
+				evaluate_game
+			end
+
+			match /check|cards/ do |client, data|
+				player = get_player(data.user)
 				next if player.nil?
 
-				whisper data.user, "You have the #{player.remaining_cards} card(s)"
+				if player.remaining_cards.count == 0
+					whisper data.user, "You do not have any cards. You are out of the game."
+				else
+					whisper data.user, "You have the #{player.remaining_cards} card(s)"
+				end
 			end
 
 			class << self
-				attr_accessor :executing
+				def execute_stack(action_input = nil)
+					game.begin_execution
 
-				def execute_stack
-					last_result = nil
 					while ! game.stack.empty?
 						sleep action_pause
+
+						logger.info "Executing #{game.current_action} action from the stack"
+
+						# Check if action requires user input
+						if game.current_action.is_a? Actions::SubAction
+							if action_input.nil? && game.current_action.prompt
+								logger.info "User input is required for #{game.current_action} action, notifying #{game.current_action.player}"
+								# Stop exeucting stack and wait for user to provide input
+								print_response game.current_action.prompt
+								return false
+							end
+						end
+
 						action = game.stack.pop
 
-						logger.info "Executing #{action} action from the stack"
-						response = action.do *last_result
+						response = action.do *action_input
 						logger.info "Result of #{action}: #{response.result}"
 
-						if response.result.is_a? Actions::Cancel
+						result = response.result
+
+						if result.is_a? Actions::Cancel
 							logger.info "Cancellation received from #{action}, removing actions from stack"
+							action_to_cancel = result.action
 							# Remove the next action (and its subactions) from the stack
 							removed_action = nil
 							begin
 								removed_action = game.stack.pop
+								if removed_action.nil?
+									raise InternalError, "Tried to remove results from stack as part of Cancel but stack is now empty. Action to cancel: #{action_to_cancel}"
+								end
+
 								logger.info "Removed '#{removed_action}' from stack"
-							end while ! removed_action.is_a? Actions::PlayAction
+							end while removed_action != action_to_cancel
 						else
-							last_result = response.result
+							action_input = response.result
 						end
 
 						print_response response
+
+						game.end_execution
+						true
+					end
+				end
+
+				def async(&block)
+					Thread.new do
+						begin
+							yield
+						rescue CoupError => e
+							self.client.say text: e.message, channel: self.channel
+						rescue => e
+							self.client.say text: "Internal error", channel: self.channel
+							logger.error "#{e.class}: #{e.message}. Backtrace:\n\t#{e.backtrace.join("\n\t")}"
+						end
 					end
 				end
 
@@ -235,6 +290,9 @@ module SlackCoupBot
 
 				def evaluate_game
 					return if game.nil? || ! game.started?
+
+					# If there are still actions on the stack, the game state should not be evaluated
+					return if ! game.stack.empty?
 
 					game.players.values.select{|p| ! p.eliminated? }.each do |player|
 						if player.remaining_cards.count == 0
@@ -255,15 +313,15 @@ module SlackCoupBot
 				end
 
 				def countdown(action)
-					logger.info "Waiting for #{action} for #{wait_time} seconds"
+					logger.info "Waiting for #{action} for #{reaction_time} seconds"
 					wait_start = Time.now
 					begin
-						if game.current_action != action
-							logger.info "#{action.player}'s #{action} has been interrupted by #{game.current_action}"
+						if game.current_player_action != action
+							logger.info "#{action.player}'s #{action} has been interrupted by #{game.current_player_action}"
 							return false
 						end
 						sleep 0.1
-					end while Time.now - wait_start < self.wait_time
+					end while Time.now - wait_start < self.reaction_time
 					true
 				end
 

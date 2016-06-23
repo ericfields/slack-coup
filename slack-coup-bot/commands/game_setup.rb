@@ -4,12 +4,12 @@ module SlackCoupBot
 	module Commands
 		class GameSetup < Base
 			class << self
-				def open_lobby(client, channel, debug: false)
+				def open_lobby(client, channel, **game_options)
 					client.say text: "Starting up a Coup lobby...", channel: channel
 
 					self.client = client
 					self.channel = channel
-					self.game = Game.new(channel, debug)
+					self.game = Game.new(channel, game_options)
 					User.load_members(channel)
 				end
 			end
@@ -20,7 +20,7 @@ module SlackCoupBot
 					next
 				end
 
-				open_lobby(client, data.channel, debug: true)
+				open_lobby(client, data.channel, self.debug_options)
 
 				User.all_users.sort_by{|u| u.name}.each do |user|
 					next if user.name == 'coup-bot'

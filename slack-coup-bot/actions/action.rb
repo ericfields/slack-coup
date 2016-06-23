@@ -10,7 +10,7 @@ module SlackCoupBot
 				@player = player
 			end
 
-			def respond(result, message: nil, private: nil, new_actions: [])
+			def respond(result: nil, message: nil, private: nil, new_actions: [])
 				Response.new(player.user, 
 					result,
 					message || public_message(result), 
@@ -27,7 +27,7 @@ module SlackCoupBot
 			end
 
 			def do(*args)
-				respond evaluate(*args)
+				respond result: evaluate(*args)
 			end
 
 			def evaluate(*args)

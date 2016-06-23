@@ -14,16 +14,23 @@ module SlackCoupBot
 		attr_reader :started
 
 		attr_accessor :stack
+		attr_accessor :executing
 
-		def initialize(channel, debug = false)
+		def initialize(channel, 
+			coins_per_player: 2, 
+			shuffle_players: true, 
+			shuffle_deck: true)
 			@channel = channel
 			# Create a deck of cards, with 3 of each role
 			@players = {}
 			@deck = []
 
 			@stack = []
+			@executing = false
 
-			@debug = debug
+			@coins_per_player = coins_per_player
+			@shuffle_players = shuffle_players
+			@shuffle_deck = shuffle_deck
 
 			3.times do
 				[Assassin, Ambassador, Captain, Contessa, Duke].each do |role_class|
@@ -56,8 +63,14 @@ module SlackCoupBot
 				raise CommandError, "Cannot start a game with less than 4 players"
 			end
 			
-			unless @debug
+			@players.values.each do |player|
+				player.gain_coins @coins_per_player
+			end
+
+			if @shuffle_deck
 				@deck.shuffle!	# Ruby built-in
+			end
+			if @shuffle_players
 				@players = Hash[@players.to_a.shuffle] # Randomize the order of players
 			end
 
@@ -75,8 +88,24 @@ module SlackCoupBot
 			@players.values.at @player_index
 		end
 
-		def current_action
+		def current_player_action
 			@stack.reverse.find{|action| action.is_a? Actions::PlayAction}
+		end
+
+		def current_action
+			@stack.last
+		end
+
+		def begin_execution
+			@executing = true
+		end
+
+		def end_execution
+			@executing = false
+		end
+
+		def executing?
+			@executing
 		end
 
 		def advance

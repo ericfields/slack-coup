@@ -30,7 +30,7 @@ module SlackCoupBot
 
 		class Assassinate < TargetedAction
 			def subactions
-				[Flip.new(target)]
+				[Flip.new(target, prompt: respond(message: "#{player} has assassinated you, #{target}. You must flip a card."))]
 			end
 
 			def validate
@@ -45,7 +45,7 @@ module SlackCoupBot
 
 		class Coup < TargetedAction
 			def subactions
-				[Flip.new(target)]
+				[Flip.new(target, prompt: respond(message: "#{player} has couped you, #{target}. You must flip a card."))]
 			end
 
 			def validate

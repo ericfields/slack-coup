@@ -3,14 +3,11 @@ require 'actions/action'
 module SlackCoupBot
 	module Actions
 		class SubAction < Action
+			attr_reader :prompt
 
-			def initialize(player, prompt = false)
+			def initialize(player, *params, prompt: nil)
 				super(player)
 				@prompt = prompt
-			end
-
-			def prompt?
-				@prompt
 			end
 
 			def ==(other)
@@ -72,11 +69,31 @@ module SlackCoupBot
 			end
 		end
 
+		class Flip < SubAction
+			def validate(*cards)
+				if cards.count != 1
+					raise ValidationError, "You must flip one card only."
+				end
+				card = cards.first
+				if ! player.has_cards? card
+					raise ValidationError, "You do not have the #{card} card."
+				end
+			end
+
+			def evaluate(card)
+				player.flip_card card
+			end
+
+			def public_message(card)
+				"#{player} revealed the #{card} card!"
+			end
+		end
+
 		class Return < SubAction
 			attr_reader :cards
 
-			def initialize(player, cards, prompt: false)
-				super(player, prompt)
+			def initialize(player, cards, prompt: nil)
+				super(player, prompt: prompt)
 				if cards.is_a? Number
 					@cards = Array.new(cards)
 				else
@@ -85,8 +102,10 @@ module SlackCoupBot
 			end
 
 			def validate(*cards)
-				if ! player.has_cards? *cards
-					raise ValidationError, "You do not have the #{cards} card(s)"
+				cards.each do |card|
+					if ! player.has_cards? card
+						raise ValidationError, "You do not have the #{card} card"
+					end
 				end
 			end
 
@@ -107,24 +126,6 @@ module SlackCoupBot
 
 			def ==(other)
 				super(other) && other.cards.count == cards.count
-			end
-		end
-
-		class Flip < SubAction
-			def initialize(player)
-				super(player, true)
-			end
-
-			def validate(card)
-				player.has_cards? card
-			end
-
-			def evaluate(card)
-				player.flip_card card
-			end
-
-			def public_message(card)
-				"#{player} revealed the #{card} card!"
 			end
 		end
 	end

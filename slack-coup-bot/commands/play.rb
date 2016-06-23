@@ -17,6 +17,11 @@ module SlackCoupBot
 				end
 
 				player = get_player(data.user)
+				if player.nil?
+					raise CommandError, "You are not in the game!"
+				elsif player.eliminated?
+					raise CommandError, "You have already been eliminated from the game, #{player}."
+				end
 
 				# Check turn
 				if player != game.current_player
@@ -32,13 +37,9 @@ module SlackCoupBot
 				action.validate
 
 				# Push action along with subactions onto stack
-				game.stack.push action
-				action.subactions.reverse.each do |subaction|
-					game.stack.push subaction
-				end
+				load_action action
 
-				self.logger.info "Current game stack: #{game.stack.show}"
-
+				sleep action_pause
 				client.say text: "#{player} will take #{action}!", channel: data.channel
 
 				Thread.new do
@@ -46,6 +47,78 @@ module SlackCoupBot
 
 					if action.blockable? || action.challengable?
 						client.say text: "Waiting for reactions...", channel: data.channel
+
+						should_do = countdown(action)
+
+						if should_do
+							client.say text: "#{player}'s #{action} will proceed!", channel: data.channel
+						end
+					end
+
+					if should_do
+						execute_stack
+
+						evaluate_game
+					end
+				end
+			end
+
+			match /(?<action>steal|assassinate|coup)( (?<target>[\w-]+)?)?/ do |client, data, match|
+				if data.channel[0] == 'D'
+					raise CommandError, "Please perform this action in a regular channel, not as a direct message"
+				end
+
+				if match[:target].nil?
+					raise CommandError, "You must specify a target for a #{match[:action]}!"
+				end
+
+				if game.nil?
+					raise CommandError, "A game of Coup has not been created. To create a Coup lobby, say 'lobby'"
+				elsif ! game.started?
+					raise CommandError, "The game has not yet started"
+				end
+
+				player = get_player(data.user)
+				if player.nil?
+					raise CommandError, "You are not in the game!"
+				elsif player.eliminated?
+					raise CommandError, "You have already been eliminated from the game, #{player}."
+				end
+
+				# Check turn
+				if player != game.current_player
+					raise CommandError, "It is not your turn, #{player}!"
+				end
+
+				if game.current_action
+					raise CommandError, "Another action is currently in progress, #{player}"
+				end
+
+				target_user = User.with_name(match[:target])
+				if target_user.nil?
+					raise CommandError, "User #{match[:target]} is not present in this channel."
+				end
+
+				target = get_player(target_user.id)
+				if target.nil?
+					raise CommandError, "#{target_user} is not in the game!"
+				elsif player.eliminated?
+					raise CommandError, "#{target_user} has already been eliminated from the game, #{player}."
+				end
+
+				action = class_for_action(match[:action]).new(player, target)
+				action.validate
+
+				load_action action
+
+				sleep action_pause
+				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
+
+				Thread.new do
+					should_do = true
+
+					if action.blockable? || action.challengable?
+						client.say text: "Waiting for reaction from #{target}...", channel: data.channel
 
 						should_do = countdown(action)
 
@@ -74,6 +147,11 @@ module SlackCoupBot
 				end
 
 				player = get_player(data.user)
+				if player.nil?
+					raise CommandError, "You are not in the game!"
+				elsif player.eliminated?
+					raise CommandError, "You have already been eliminated from the game, #{player}."
+				end
 
 				reaction = class_for_action('block').new(player, game.current_action)
 
@@ -95,9 +173,10 @@ module SlackCoupBot
 					raise CommandError, "Only #{game.current_action.target} can #{reaction} this action"
 				end
 
+				sleep action_pause
 				client.say text: "#{player} will #{reaction}!", channel: data.channel
 
-				game.stack.push reaction
+				load_action reaction
 
 				Thread.new do
 
@@ -123,10 +202,12 @@ module SlackCoupBot
 				def execute_stack
 					last_result = nil
 					while ! game.stack.empty?
+						sleep action_pause
 						action = game.stack.pop
 
+						logger.info "Executing #{action} action from the stack"
 						response = action.do *last_result
-						logger.info "Executed #{action} action, result: #{response.result}"
+						logger.info "Result of #{action}: #{response.result}"
 
 						if response.result.is_a? Actions::Cancel
 							logger.info "Cancellation received from #{action}, removing actions from stack"
@@ -142,6 +223,14 @@ module SlackCoupBot
 
 						print_response response
 					end
+				end
+
+				def load_action(action)
+					game.stack.push action
+					action.subactions.reverse.each do |subaction|
+						game.stack.push subaction
+					end
+					logger.info "Action #{action} has been pushed onto the game stack. Current game stack: #{game.stack.show}"
 				end
 
 				def evaluate_game
@@ -179,13 +268,7 @@ module SlackCoupBot
 				end
 
 				def get_player(user)
-					player = game.players[user]
-					if player.nil?
-						raise CommandError, "You are not in the game!"
-					elsif player.eliminated?
-						raise CommandError, "You have already been eliminated from the game, #{player}."
-					end
-					player
+					game.players[user]
 				end
 
 				def print_response(response)

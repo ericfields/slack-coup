@@ -5,6 +5,7 @@ module SlackCoupBot
 		cattr_accessor :client
 
 		cattr_accessor :wait_time
+		cattr_accessor :action_pause
 		cattr_accessor :logger
 	end
 end

@@ -25,6 +25,7 @@ module SlackCoupBot
 		extend State
 
 		self.wait_time = 5
+		self.action_pause = 0.5
 		self.logger = SlackRubyBot::Client.logger
 	end
 

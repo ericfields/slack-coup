@@ -22,9 +22,6 @@ module SlackCoupBot
 			end
 
 			def validate
-				if player.coins < 2
-					raise ValidationError, "You cannot steal - two coins are required. You only have #{player.coins} coin(s)."
-				end
 				if target.coins < 1
 					raise ValidationError, "You cannot steal from #{target} - they have no coins."
 				end
@@ -37,6 +34,9 @@ module SlackCoupBot
 			end
 
 			def validate
+				if player.coins < 3
+					raise ValidationError, "You cannot assassinate - three coins are required. You only have #{player.coins} coin(s)."
+				end
 				if target.remaining_cards.count < 1
 					raise ValidationError, "You cannot assassinate #{target} - they are out of the game."
 				end
@@ -47,7 +47,15 @@ module SlackCoupBot
 			def subactions
 				[Flip.new(target)]
 			end
-		end
 
+			def validate
+				if player.coins < 7
+					raise ValidationError, "You cannot coup - seven coins are required. You only have #{player.coins} coin(s)."
+				end
+				if target.remaining_cards.count < 1
+					raise ValidationError, "You cannot coup #{target} - they are out of the game."
+				end
+			end
+		end
 	end
 end

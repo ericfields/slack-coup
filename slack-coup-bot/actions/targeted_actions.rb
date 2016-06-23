@@ -13,6 +13,9 @@ module SlackCoupBot
 			end
 
 			def validate
+				if player == target
+					raise ValidationError, "You cannot #{self} yourself, #{player}"
+				end
 			end
 		end
 
@@ -22,6 +25,7 @@ module SlackCoupBot
 			end
 
 			def validate
+				super
 				if target.coins < 1
 					raise ValidationError, "You cannot steal from #{target} - they have no coins."
 				end
@@ -30,10 +34,11 @@ module SlackCoupBot
 
 		class Assassinate < TargetedAction
 			def subactions
-				[Flip.new(target, prompt: respond(message: "#{player} has assassinated you, #{target}. You must flip a card."))]
+				[Flip.new(target, prompt: "#{player} has assassinated you, #{target}. You must flip a card.")]
 			end
 
 			def validate
+				super
 				if player.coins < 3
 					raise ValidationError, "You cannot assassinate - three coins are required. You only have #{player.coins} coin(s)."
 				end
@@ -45,10 +50,11 @@ module SlackCoupBot
 
 		class Coup < TargetedAction
 			def subactions
-				[Flip.new(target, prompt: respond(message: "#{player} has couped you, #{target}. You must flip a card."))]
+				[Flip.new(target, prompt: "#{player} has couped you, #{target}. You must flip a card.")]
 			end
 
 			def validate
+				super
 				if player.coins < 7
 					raise ValidationError, "You cannot coup - seven coins are required. You only have #{player.coins} coin(s)."
 				end

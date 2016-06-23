@@ -32,7 +32,7 @@ module SlackCoupBot
 				client.say text: "A game of Coup has been started!\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 			end
 
-			match 'lobby' do |client, data, match|
+			match 'coup lobby' do |client, data, match|
 				if data.channel[0] == 'D'
 					client.say text: "You can't start a lobby in a direct message channel. Run this command in a general Slack channel.", channel: data.channel
 					next
@@ -91,6 +91,22 @@ module SlackCoupBot
 				client.say text: "#{player} has joined the game.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 			end
 
+			match 'leave' do |client, data|
+				next if game.nil?
+
+				removed_player = game.remove_player data.user
+
+				next if removed_player.nil?
+
+				client.say text: "#{removed_player} has left the game.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
+				
+				if game.players.count == 0
+					end_game
+
+					client.say text: "No players are in the Coup lobby. The lobby is now closed.", channel: data.channel
+				end
+			end
+
 			match /invite (?<players>(\w+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
@@ -109,31 +125,34 @@ module SlackCoupBot
 				client.say text: "Added #{player_names} to the game", channel: data.channel
 			end
 
+			match /kick (?<players>(\w+(\s+)?)+)/ do |client, data, match|
+				player_names = match[:players].split ' '
+
+				users = player_names.collect do |player_name|
+					user = User.with_name(player_name)
+					if user.nil?
+						raise CommandError, "#{user_name} is not a member of the channel for the current game"
+					end
+					user
+				end
+
+				users.each do |user|
+					removed_player = game.remove_player user.id
+					if removed_player
+						client.say text: "Removed #{player_names} from the game", channel: data.channel
+					else
+						client.say text: "Player #{user.name} is not in the game", channel: data.channel
+					end
+				end
+			end
+
 			match 'status' do |client, data, match|
 				if game.nil?
 					client.say text: "No lobby is currently open for Coup.", channel: data.channel
 				elsif ! game.started?
 					client.say text: "A lobby for Coup is currently open.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 				else
-					client.say text: "A game of Coup is under way.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
-				end
-			end
-
-			match 'leave' do |client, data|
-				next if game.nil?
-
-				removed_player = game.remove_player data.user
-
-				if removed_player.nil?
-					next
-				end
-
-				client.say text: "#{removed_player} has left the game.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
-				
-				if game.players.count == 0
-					end_game
-
-					client.say text: "No players are in the Coup lobby. The lobby is now closed.", channel: data.channel
+					client.say text: "A game of Coup is under way.\n\nStatus:\n\n#{game.status}", channel: data.channel
 				end
 			end
 

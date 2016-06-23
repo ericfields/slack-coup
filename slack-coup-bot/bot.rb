@@ -24,8 +24,8 @@ module SlackCoupBot
 	class Bot < SlackRubyBot::Bot
 		extend State
 
-		self.reaction_time = 5
-		self.action_pause = 0
+		self.reaction_time = 0
+		self.message_delay = 0
 		self.logger = SlackRubyBot::Client.logger
 
 		self.debug_options = {

@@ -46,6 +46,14 @@ module SlackCoupBot
 			  end
 			end
 
+			def acts?(action)
+				self.class.actors(action).include? self.class
+			end
+
+			def blocks?(action)
+				self.class.blockers(action).include? self.class
+			end
+
 			def initialize
 				@flipped = false
 			end

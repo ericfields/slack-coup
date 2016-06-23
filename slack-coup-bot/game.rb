@@ -39,6 +39,8 @@ module SlackCoupBot
 			end
 
 			@player_index = 0
+
+			@logger = SlackRubyBot::Client.logger
 		end
 
 		def add_player(user)
@@ -56,6 +58,32 @@ module SlackCoupBot
 
 		def player_list
 			@players.values.join("\n")
+		end
+
+		def status
+			status_str = ""
+			@players.values.each do |player|
+				player_strs = []
+				if player.eliminated?
+					player_strs << "#{player} (eliminated)"
+				else
+					player_strs << "#{player}"
+					player_strs << "#{player.coins} coins"
+				end
+
+				card_strs = []
+				player.cards.each do |card|
+					if card.flipped?
+						card_strs << "#{card}"
+					end
+				end
+				unless card_strs.empty?
+					player_strs << "#{card_strs}"
+				end
+
+				status_str << player_strs.join('  -  ') + "\n"
+			end
+			status_str
 		end
 
 		def start
@@ -84,6 +112,18 @@ module SlackCoupBot
 			@started = true
 		end
 
+		def return_to_deck(card)
+			card.hide
+			@deck.push card
+			if @shuffle_deck
+				@deck.shuffle!
+			end
+		end
+
+		def take_from_deck
+			@deck.shift
+		end
+
 		def current_player
 			@players.values.at @player_index
 		end
@@ -110,7 +150,7 @@ module SlackCoupBot
 
 		def advance
 			begin
-				@player_index = (@player_index + 1) % remaining_players
+				@player_index = (@player_index + 1) % @players.count
 			end while @players.values.at(@player_index).eliminated?
 		end
 

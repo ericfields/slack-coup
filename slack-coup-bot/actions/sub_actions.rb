@@ -5,9 +5,14 @@ module SlackCoupBot
 		class SubAction < Action
 			attr_reader :prompt
 
-			def initialize(player, *params, prompt: nil)
+			def initialize(player, *params, prompt: nil, private_prompt: nil)
 				super(player)
-				@prompt = prompt
+				if prompt || private_prompt
+					@prompt = Response.new(player.user, nil, prompt, private_prompt, nil)
+				end
+			end
+
+			def public_message
 			end
 
 			def ==(other)
@@ -55,9 +60,11 @@ module SlackCoupBot
 
 			def evaluate(count = nil)
 				@count ||= (count.is_a?(Enumerable) ? count.count : count)
-				(1..@count).collect do
-					@player.gain_card
+				cards = []
+				@count.times do
+					cards << @player.gain_card
 				end
+				cards
 			end
 
 			def public_message(cards)
@@ -92,10 +99,10 @@ module SlackCoupBot
 		class Return < SubAction
 			attr_reader :cards
 
-			def initialize(player, cards, prompt: nil)
-				super(player, prompt: prompt)
-				if cards.is_a? Number
-					@cards = Array.new(cards)
+			def initialize(player, *cards, **options)
+				super(player, **options)
+				if cards.first.is_a? Numeric
+					@cards = Array.new(cards.first)
 				else
 					@cards = cards
 				end
@@ -110,14 +117,14 @@ module SlackCoupBot
 			end
 
 			def evaluate(*cards)
-				@cards = cards if @cards.empty?
+				@cards = cards if !@cards.any?
 				@cards.collect do |card|
 					@player.lose_card card
 				end
 			end
 
 			def public_message(cards)
-				"#{player} returend #{cards.count} card(s) to the deck"
+				"#{player} returned #{cards.count} card(s) to the deck"
 			end
 
 			def private_message(cards)

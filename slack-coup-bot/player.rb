@@ -31,21 +31,19 @@ class Player
 	end
 
 	def gain_card
-		card = @game.deck.shift
+		card = @game.take_from_deck
 		@cards.push card
 		card
 	end
 
 	def lose_card(card)
-		card_index = @cards.index_of card
+		card_index = @cards.index card
 		if card_index
 			card = @cards.delete_at card_index
-			card.hide
-			@game.deck.push card
-			@game.deck.shuffle
+			@game.return_to_deck card
 			card
 		else
-			nil
+			raise InternalError, "#{self} is trying to lose the #{card} card but #{self} does not have that card"
 		end
 	end
 
@@ -64,6 +62,10 @@ class Player
 
 	def remaining_cards
 		@cards.select{|c| ! c.flipped? }
+	end
+
+	def flipped_cards
+		@cards.select{|c| c.flipped? }
 	end
 
 	def eliminate

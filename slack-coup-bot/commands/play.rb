@@ -5,16 +5,14 @@ module SlackCoupBot
 	module Commands
 		class Play < Base
 
-			match /(?<action>income|tax|foreign aid)/ do |client, data, match|
+			match /(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
+				logger.info "Passive action requested: #{match[:action]}"
+
 				if data.channel[0] == 'D'
 					raise CommandError, "Please perform this action in a regular channel, not as a direct message"
 				end
 
-				if game.nil?
-					raise CommandError, "A game of Coup has not been created. To create a Coup lobby, say 'lobby'"
-				elsif ! game.started?
-					raise CommandError, "The game has not yet started"
-				end
+				next if game.nil? || ! game.started?
 
 				player = get_player(data.user)
 				if player.nil?
@@ -37,9 +35,9 @@ module SlackCoupBot
 				action.validate
 
 				# Push action along with subactions onto stack
-				load_action action
+				load_actions action
 
-				sleep action_pause
+				sleep message_delay
 				client.say text: "#{player} will take #{action}!", channel: data.channel
 
 				async do
@@ -63,7 +61,9 @@ module SlackCoupBot
 				end
 			end
 
-			match /(?<action>steal|assassinate|coup)( (?<target>[\w-]+)?)?/ do |client, data, match|
+			match /^(?<action>steal|assassinate|coup)( (?<target>[\w-]+)?)?\s*$/ do |client, data, match|
+				logger.info "Aggressive action requested: #{match[:action]}"
+
 				if data.channel[0] == 'D'
 					raise CommandError, "Please perform this action in a regular channel, not as a direct message"
 				end
@@ -72,11 +72,7 @@ module SlackCoupBot
 					raise CommandError, "You must specify a target for a #{match[:action]}!"
 				end
 
-				if game.nil?
-					raise CommandError, "A game of Coup has not been created. To create a Coup lobby, say 'lobby'"
-				elsif ! game.started?
-					raise CommandError, "The game has not yet started"
-				end
+				next if game.nil? || ! game.started?
 
 				player = get_player(data.user)
 				if player.nil?
@@ -109,9 +105,9 @@ module SlackCoupBot
 				action = class_for_action(match[:action]).new(player, target)
 				action.validate
 
-				load_action action
+				load_actions action
 
-				sleep action_pause
+				sleep message_delay
 				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
 
 				async do
@@ -136,6 +132,8 @@ module SlackCoupBot
 			end
 
 			match /(?<reaction>block|challenge)/ do |client, data, match|
+				logger.info "Reaction requested: #{match[:reaction]}"
+				
 				if data.channel[0] == 'D'
 					raise CommandError, "Please perform this action in a regular channel, not as a direct message"
 				end
@@ -149,6 +147,10 @@ module SlackCoupBot
 					raise CommandError, "You have already been eliminated from the game, #{player}."
 				end
 
+				if game.current_action.nil?
+					raise CommandError, "There is no action to #{match[:reaction]}"
+				end
+
 				reaction = class_for_action(match[:reaction]).new(player, game.current_player_action)
 
 				if game.executing?
@@ -157,29 +159,32 @@ module SlackCoupBot
 					raise CommandError, "There is no action to #{reaction}"
 				elsif game.current_player_action == reaction
 					raise CommandError, "A #{game.current_player_action} has already been initiated"
-				elsif game.current_player_action.player == player
-					raise CommandError, "You cannot #{reaction} your own #{game.current_player_action}"
 				end
 
 				reaction.validate
 
-				sleep action_pause
+				sleep message_delay
 				client.say text: "#{player} will #{reaction}!", channel: data.channel
 
-				load_action reaction
+				load_actions reaction
 
-				async do
+				if reaction.challengable?
+					async do
+						if countdown(reaction)
+							execute_stack
 
-					if countdown(reaction)
-						execute_stack
-
-						evaluate_game
+							evaluate_game
+						end
 					end
-
+				else
+					execute_stack
+					evaluate_game
 				end
 			end
 
 			match /(?<subaction>flip|return)( (?<cards>[\w\s]+))?/ do |client, data, match|
+				logger.info "Sub action requested: #{match[:subaction]}"
+
 				next if game.nil? || !game.started?
 
 				player = get_player(data.user)
@@ -194,8 +199,9 @@ module SlackCoupBot
 					class_for_card(card_name).new
 				end
 
-				subaction = class_for_action(match[:subaction]).new(player, cards)
+				subaction = class_for_action(match[:subaction]).new(player, *cards)
 				if subaction != game.current_action
+					logger.info "Action #{subaction} does not match action #{game.current_action}"
 					raise CommandError, "Now is not the time to #{subaction}, #{player}"
 				end
 
@@ -207,6 +213,8 @@ module SlackCoupBot
 			end
 
 			match /check|cards/ do |client, data|
+				logger.info "Card check action requested"
+
 				player = get_player(data.user)
 				next if player.nil?
 
@@ -218,17 +226,17 @@ module SlackCoupBot
 			end
 
 			class << self
-				def execute_stack(action_input = nil)
+				def execute_stack(user_input = nil)
+					action_input = user_input
 					game.begin_execution
 
 					while ! game.stack.empty?
-						sleep action_pause
-
-						logger.info "Executing #{game.current_action} action from the stack"
+						logger.info "Initiating execution flow: Current game stack: #{game.stack.show}"
+						sleep message_delay
 
 						# Check if action requires user input
 						if game.current_action.is_a? Actions::SubAction
-							if action_input.nil? && game.current_action.prompt
+							if game.current_action.prompt && user_input.nil?
 								logger.info "User input is required for #{game.current_action} action, notifying #{game.current_action.player}"
 								# Stop exeucting stack and wait for user to provide input
 								print_response game.current_action.prompt
@@ -238,8 +246,10 @@ module SlackCoupBot
 
 						action = game.stack.pop
 
+						logger.info "Executing #{action} action from the stack"
 						response = action.do *action_input
-						logger.info "Result of #{action}: #{response.result}"
+
+						logger.info "Performed #{action}. Result: #{response.result || 'nil'}"
 
 						result = response.result
 
@@ -258,6 +268,10 @@ module SlackCoupBot
 							end while removed_action != action_to_cancel
 						else
 							action_input = response.result
+						end
+
+						unless response.new_actions.empty?
+							load_actions *(response.new_actions)
 						end
 
 						print_response response
@@ -280,12 +294,16 @@ module SlackCoupBot
 					end
 				end
 
-				def load_action(action)
-					game.stack.push action
-					action.subactions.reverse.each do |subaction|
-						game.stack.push subaction
+				def load_actions(*actions)
+					actions.reverse.each do |action|
+						game.stack.push action
+						if action.is_a? Actions::PlayAction
+							action.subactions.reverse.each do |subaction|
+								game.stack.push subaction
+							end
+						end
+						logger.info "Action #{action} has been pushed onto the game stack. Current game stack: #{game.stack.show}"
 					end
-					logger.info "Action #{action} has been pushed onto the game stack. Current game stack: #{game.stack.show}"
 				end
 
 				def evaluate_game
@@ -296,7 +314,7 @@ module SlackCoupBot
 
 					game.players.values.select{|p| ! p.eliminated? }.each do |player|
 						if player.remaining_cards.count == 0
-							self.logger.info "#{player} has cards #{player.cards} - #{player.remaining_cards} are flipped and #{player} is out of the game"
+							self.logger.info "#{player} has cards #{player.cards} - all of player's cards are flipped and #{player} is out of the game"
 							player.eliminate
 							self.client.say text: "#{player} is out of the game!", channel: self.channel
 						end
@@ -310,6 +328,8 @@ module SlackCoupBot
 						game.advance
 						self.client.say text: "It is now #{game.current_player}'s turn to act", channel: self.channel
 					end
+
+					logger.info ""
 				end
 
 				def countdown(action)
@@ -326,6 +346,9 @@ module SlackCoupBot
 				end
 
 				def get_player(user)
+					if game.nil?
+						raise CommandError, "There is no game in-progress"
+					end
 					game.players[user]
 				end
 
@@ -347,22 +370,11 @@ module SlackCoupBot
 				end
 
 				def class_for_card(card_name)
-					card_name = 'SlackCoupBot::Cards::' + card_name.to_s.capitalize
+					card_name = card_name.to_s.capitalize
 					begin
-						Object.const_get(card_name)
+						Object.const_get('SlackCoupBot::Cards::' + card_name)
 					rescue NameError
 						raise CommandError, "#{card_name} is not a card!"
-					end
-				end
-
-				def add_player(user)
-					game.add_player user
-				end
-
-				def remove_player(user)
-					removed_player = game.remove_player user
-					if removed_player.nil?
-						raise CommandError, "#{subject} not in the game."
 					end
 				end
 			end

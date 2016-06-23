@@ -37,15 +37,16 @@ module SlackCoupBot
 
 				def start_game
 					game.start
-
+					logger.info "Game has started."
 					game.players.values.each do |player|
 						remaining_cards = player.cards.select{|c| ! c.flipped? }
-						whisper player.user.id, "You have the #{player.cards} cards"
+						whisper player.user.id, "You have the #{player.cards} card(s)"
 					end
 				end
 
 				def end_game
 					self.game = nil
+					logger.info "Game has ended."
 				end
 			end
 

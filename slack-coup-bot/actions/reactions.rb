@@ -33,6 +33,7 @@ module SlackCoupBot
 
 		class Block < Reaction
 			def validate
+				super
 				if ! action.blockable?
 					raise ValidationError, "Cannot block #{action}"
 				end
@@ -41,23 +42,25 @@ module SlackCoupBot
 
 		class Challenge < Reaction
 			def subactions
-				[Flip.new(action.player, prompt: respond(message: "#{player} has challenged your #{action} action, #{action.player}. You must flip a card."))]
+				[Flip.new(action.player, prompt: "#{player} has challenged your #{action} action, #{action.player}. You must flip a card.")]
 			end
 
 			def validate
+				super
 				if ! action.challengable?
 					raise ValidationError, "Cannot challenge #{action}"
 				end
 			end
 
 			def evaluate(card)
-				if action.is_a?(Block) && ! action.blockers.include?(card.class)
-					false
-				elsif ! action.actors.include?(card.class)
-					false
-				else
-					true
+				if action.is_a?(Block)
+					if card.blocks?(action)
+						return false
+					end
+				elsif card.acts?(action)
+					return false
 				end
+				true
 			end
 
 			def do(card)
@@ -69,7 +72,7 @@ module SlackCoupBot
 				else
 					# Challenge failed. Challenger must flip, and challengee will exchange their flipped card
 					message = "Challenge failed! #{action.player} has the #{card} card!"
-					new_actions = [Flip.new(player, prompt: respond(message: "You must flip a card, #{player}")), Return.new(target, card), Pickup.new(target, 1)]
+					new_actions = [Flip.new(player, prompt: "You must flip a card, #{player}"), Return.new(target, card), PickUp.new(target, 1)]
 					result = nil
 				end
 

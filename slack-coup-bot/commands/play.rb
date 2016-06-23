@@ -39,8 +39,7 @@ module SlackCoupBot
 				# Push action along with subactions onto stack
 				load_actions action
 
-				sleep message_delay
-				client.say text: "#{player} will take #{action}!", channel: data.channel
+				client.say text: "#{player} will #{action}!", channel: data.channel
 
 				async do
 					should_do = true
@@ -88,7 +87,9 @@ module SlackCoupBot
 					raise CommandError, "It is not your turn, #{player}!"
 				end
 
-				check_coup(player)
+				if match[:action] != 'coup'
+					check_coup(player)
+				end
 
 				if game.current_player_action
 					raise CommandError, "Another action is currently in progress, #{player}"
@@ -292,7 +293,7 @@ module SlackCoupBot
 
 				def check_coup(player)
 					if player.coins >= 10
-						raise CommandError, "#{player} has more than 10 coins. #{player} must coup!"
+						raise CommandError, "#{player} has 10 coins or more. #{player} must coup!"
 					end
 				end
 
@@ -343,13 +344,13 @@ module SlackCoupBot
 						game.advance
 						self.client.say text: "It is now #{game.current_player}'s turn to act", channel: self.channel
 						if game.current_player.coins >= 10
-							self.client.say text: "#{game.current_player} has 10 coins...#{game.current_player} must coup!", channel: self.channel
+							self.client.say text: "#{game.current_player} has 10 coins or more. #{game.current_player} must coup!", channel: self.channel
 						end
 					end
 				end
 
 				def countdown(action)
-					logger.info "Waiting for #{action} for #{reaction_time} seconds"
+					logger.info "Waiting for #{action} for #{time_to_react} seconds"
 					wait_start = Time.now
 					begin
 						if game.current_player_action != action
@@ -357,7 +358,7 @@ module SlackCoupBot
 							return false
 						end
 						sleep 0.1
-					end while Time.now - wait_start < self.reaction_time
+					end while Time.now - wait_start < self.time_to_react
 					true
 				end
 

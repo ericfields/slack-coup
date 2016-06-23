@@ -35,14 +35,14 @@ module SlackCoupBot
 			def validate
 				super
 				if ! action.blockable?
-					raise ValidationError, "Cannot block #{action}"
+					raise ValidationError, "#{action} cannot be blocked."
 				end
 			end
 		end
 
 		class Challenge < Reaction
 			def subactions
-				[Flip.new(action.player, prompt: "#{player} has challenged your #{action} action, #{action.player}. You must flip a card.")]
+				[Flip.new(action.player, prompt: "#{player} has challenged your #{action} action, #{action.player}. You must flip a card by calling `flip <card>`.")]
 			end
 
 			def validate
@@ -72,7 +72,7 @@ module SlackCoupBot
 				else
 					# Challenge failed. Challenger must flip, and challengee will exchange their flipped card
 					message = "Challenge failed! #{action.player} has the #{card} card!"
-					new_actions = [Flip.new(player, prompt: "You must flip a card, #{player}"), Return.new(target, card), PickUp.new(target, 1)]
+					new_actions = [Flip.new(player, prompt: "You must flip a card, #{player}. Flip a card by calling `flip <card>`."), Return.new(target, card), PickUp.new(target, 1)]
 					result = nil
 				end
 

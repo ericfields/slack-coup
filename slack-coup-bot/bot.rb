@@ -5,6 +5,7 @@ SlackRubyBot.configure do |c|
 end
 
 require 'slack-ruby-bot'
+require 'user_server'
 
 require 'game'
 require 'player'
@@ -24,25 +25,17 @@ module SlackCoupBot
 	class Bot < SlackRubyBot::Bot
 		extend State
 
-		self.reaction_time = 8
-		self.message_delay = 1
 		self.logger = SlackRubyBot::Client.logger
 
+		self.time_to_react = 10
+		self.message_delay = 0.8
+
 		self.debug_options = {
-			coins_per_player: 7, 
+			coins_per_player: 7,
+			cards_per_player: 2,
 			shuffle_deck: false, 
 			shuffle_players: false
 		}
-	end
-
-	class Server < SlackRubyBot::Server
-		on 'message' do |client, data|
-			if data.subtype == 'channel_join'
-				User.cache_user data.user
-			elsif data.subtype == 'channel_leave'
-				User.uncache_user data.user
-			end
-		end
 	end
 end
 

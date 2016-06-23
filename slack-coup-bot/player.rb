@@ -81,6 +81,6 @@ class Player
 	end
 
 	def to_s
-		@user.name
+		"*#{@user.name}*"
 	end
 end

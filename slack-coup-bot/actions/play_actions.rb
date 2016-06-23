@@ -24,6 +24,10 @@ module SlackCoupBot
 			def subactions
 				[GainCoins.new(player, 1)]
 			end
+
+			def to_s
+				"take `income`"
+			end
 		end
 
 		class ForeignAid < PlayAction
@@ -32,7 +36,7 @@ module SlackCoupBot
 			end
 
 			def to_s
-				'foreign aid'
+				"take `foreign aid`"
 			end
 		end
 
@@ -46,7 +50,7 @@ module SlackCoupBot
 			def subactions
 				cards_to_exchange = player.remaining_cards.count
 				[PickUp.new(player, cards_to_exchange), Return.new(player, cards_to_exchange, 
-					private_prompt: "Please return #{cards_to_exchange} cards to the deck with 'return <card1> <card2>'")]
+					private_prompt: "Return #{cards_to_exchange} card(s) to the deck with `return #{cards_to_exchange > 1 ? '<card1> <card2>' : '<card>'}`")]
 			end
 		end
 	end

@@ -77,7 +77,7 @@ module SlackCoupBot
 			end
 
 			def to_s
-				self.class.name.split('::').last
+				"`#{self.class.name.split('::').last}`"
 			end
 		end
 

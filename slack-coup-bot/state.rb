@@ -4,7 +4,7 @@ module SlackCoupBot
 		cattr_accessor :channel
 		cattr_accessor :client
 
-		cattr_accessor :reaction_time
+		cattr_accessor :time_to_react
 		cattr_accessor :message_delay
 		cattr_accessor :logger
 

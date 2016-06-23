@@ -5,7 +5,7 @@ module SlackCoupBot
 		class GameSetup < Base
 			class << self
 				def open_lobby(client, channel, **game_options)
-					client.say text: "Starting up a Coup lobby...", channel: channel
+					client.say text: "Loading the Coup lobby...", channel: channel
 
 					self.client = client
 					self.channel = channel
@@ -14,7 +14,8 @@ module SlackCoupBot
 				end
 			end
 
-			match 'debug' do |client, data, match|
+			match /^coup-debug$/ do |client, data, match|
+				logger.info "Received request to initiate debugging game"
 				if data.channel[0] == 'D'
 					raise CommandError, "Can't debug - you're in a direct message channel"
 					next
@@ -32,7 +33,9 @@ module SlackCoupBot
 				client.say text: "A game of Coup has been started!\n\nPlayers:\n\n#{game.player_list}\n\nIt is #{game.current_player}'s turn.", channel: data.channel
 			end
 
-			match 'coup lobby' do |client, data, match|
+			match /^coup-lobby$/ do |client, data, match|
+				logger.info "Received request to open a coup lobby"
+
 				if data.channel[0] == 'D'
 					client.say text: "You can't start a lobby in a direct message channel. Run this command in a general Slack channel.", channel: data.channel
 					next
@@ -54,7 +57,8 @@ module SlackCoupBot
 				client.say text: "A new lobby for a game of Coup has been opened.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 			end
 
-			match 'start' do |client, data|
+			match /^coup-start$/ do |client, data|
+				logger.info "Received request to start game"
 				if game.nil?
 					client.say text: "No Coup lobby has been opened", channel: data.channel
 				elsif game.started?
@@ -70,7 +74,7 @@ module SlackCoupBot
 				end
 			end
 
-			match 'join' do |client, data|
+			match /^coup-join$/ do |client, data|
 				if game.nil?
 					client.say text: "No game has been started. Start a new game of Coup by typing 'lobby'.", channel: data.channel
 					next
@@ -91,7 +95,7 @@ module SlackCoupBot
 				client.say text: "#{player} has joined the game.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 			end
 
-			match 'leave' do |client, data|
+			match /^coup-leave$/ do |client, data|
 				next if game.nil?
 
 				removed_player = game.remove_player data.user
@@ -107,25 +111,24 @@ module SlackCoupBot
 				end
 			end
 
-			match /invite (?<players>(\w+(\s+)?)+)/ do |client, data, match|
+			match /^coup-invite (?<players>(\w+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
-				users = player_names.collect do |player_name|
+				player_names.each do |player_name|
 					user = User.with_name(player_name)
 					if user.nil?
-						raise CommandError, "#{user_name} is not a member of the channel for the current game"
+						client.say text: "*#{player_name}* is not a member of the channel for the current game", channel: data.channel
+						next
 					end
-					user
+					player = game.add_player user.id
+					client.say text: "Added #{player} to the game.", channel: data.channel
 				end
 
-				users.each do |user|
-					game.add_player user.id
-				end
+				client.say text: "Players:\n\n#{game.player_list}", channel: data.channel
 
-				client.say text: "Added #{player_names} to the game", channel: data.channel
 			end
 
-			match /kick (?<players>(\w+(\s+)?)+)/ do |client, data, match|
+			match /^coup-kick (?<players>(\w+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
 				users = player_names.collect do |player_name|
@@ -146,7 +149,7 @@ module SlackCoupBot
 				end
 			end
 
-			match 'status' do |client, data, match|
+			match /^status/ do |client, data, match|
 				if game.nil?
 					client.say text: "No lobby is currently open for Coup.", channel: data.channel
 				elsif ! game.started?
@@ -156,7 +159,7 @@ module SlackCoupBot
 				end
 			end
 
-			match 'end' do |client, data|
+			match /^coup-end/ do |client, data|
 				next if game.nil?
 
 				end_game

@@ -17,9 +17,10 @@ module SlackCoupBot
 		attr_accessor :executing
 
 		def initialize(channel, 
-			coins_per_player: 2, 
-			shuffle_players: true, 
-			shuffle_deck: true)
+			coins_per_player: 2,
+			cards_per_player: 2,
+			shuffle_deck: true,
+			shuffle_players: true)
 			@channel = channel
 			# Create a deck of cards, with 3 of each role
 			@players = {}
@@ -29,6 +30,7 @@ module SlackCoupBot
 			@executing = false
 
 			@coins_per_player = coins_per_player
+			@cards_per_player = cards_per_player
 			@shuffle_players = shuffle_players
 			@shuffle_deck = shuffle_deck
 
@@ -103,7 +105,7 @@ module SlackCoupBot
 			end
 
 			players.values.each do |player|
-				2.times do
+				@cards_per_player.times do
 					player.gain_card
 				end
 			end

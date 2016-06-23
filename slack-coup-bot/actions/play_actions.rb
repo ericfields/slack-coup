@@ -16,7 +16,7 @@ module SlackCoupBot
 			end
 
 			def public_message(result)
-				"#{player}'s #{self} action has completed.\n"
+				"#{player}'s #{self} action has completed."
 			end
 		end
 
@@ -44,7 +44,7 @@ module SlackCoupBot
 
 		class Exchange < PlayAction
 			def subactions
-				cards_to_exchange = player.remaining_cards
+				cards_to_exchange = player.remaining_cards.count
 				[PickUp.new(cards_to_exchange), Return.new(cards_to_exchange, prompt: true)]
 			end
 		end

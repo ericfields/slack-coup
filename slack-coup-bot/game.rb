@@ -21,12 +21,12 @@ module SlackCoupBot
 			@players = {}
 			@deck = []
 
-			@stack =[]
+			@stack = []
 
 			@debug = debug
 
-			[Assassin, Ambassador, Captain, Contessa, Duke].each do |role_class|
-				3.times do
+			3.times do
+				[Assassin, Ambassador, Captain, Contessa, Duke].each do |role_class|
 					@deck.push role_class.new
 				end
 			end
@@ -55,10 +55,9 @@ module SlackCoupBot
 			if @players.count < 4
 				raise CommandError, "Cannot start a game with less than 4 players"
 			end
-
-			@deck.shuffle!	# Ruby built-in
 			
 			unless @debug
+				@deck.shuffle!	# Ruby built-in
 				@players = Hash[@players.to_a.shuffle] # Randomize the order of players
 			end
 
@@ -74,6 +73,10 @@ module SlackCoupBot
 
 		def current_player
 			@players.values.at @player_index
+		end
+
+		def current_action
+			@stack.reverse.find{|action| action.is_a? Actions::PlayAction}
 		end
 
 		def advance

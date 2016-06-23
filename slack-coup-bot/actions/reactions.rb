@@ -2,12 +2,27 @@ require 'actions/play_actions'
 
 module SlackCoupBot
 	module Actions
-		class Reaction < PlayAction
+
+		class Cancel
+			def to_s
+				"cancellation"
+			end
+		end
+
+		class Reaction < TargetedAction
 			attr_reader :action
 
 			def initialize(player, action)
-				super(player)
+				super(player, action.player)
 				@action = action
+			end
+
+			def public_message(result)
+				"#{player}'s #{self} succeeds!"
+			end
+
+			def evaluate
+				Cancel.new
 			end
 		end
 

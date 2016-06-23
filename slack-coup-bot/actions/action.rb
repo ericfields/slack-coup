@@ -42,6 +42,10 @@ module SlackCoupBot
 			def to_s
 				self.class.name.split('::').last.downcase
 			end
+
+			def ==(other_action)
+				self.class == other_action.class
+			end
 		end
 	end
 end

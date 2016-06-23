@@ -37,7 +37,7 @@ module SlackCoupBot
 			end
 
 			def validate
-				if target.remaining_cards < 1
+				if target.remaining_cards.count < 1
 					raise ValidationError, "You cannot assassinate #{target} - they are out of the game."
 				end
 			end

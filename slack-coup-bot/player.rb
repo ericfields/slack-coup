@@ -63,7 +63,7 @@ class Player
 	end
 
 	def remaining_cards
-		@cards.count{|c| ! c.flipped? }
+		@cards.select{|c| ! c.flipped? }
 	end
 
 	def eliminate

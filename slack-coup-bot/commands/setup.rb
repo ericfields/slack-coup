@@ -64,8 +64,8 @@ module SlackCoupBot
 				game.add_player data.user
 
 				client.say text: "A new lobby for a game of Coup has been opened.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
-				client.say text: "Join, leave, invite, or kick players with `coup-join`, `coup-leave`, `coup-invite`, `coup-kick`", channel: data.channel
-				client.say text: "Start the game with `coup-start`, or end the game and close the lobby with `coup-end`", channel: data.channel
+				client.say text: "You can join, leave, invite, or kick players with `coup-join`, `coup-leave`, `coup-invite`, `coup-kick`", channel: data.channel
+				client.say text: "You can start the game with `coup-start`, or end the game and close the lobby with `coup-end`", channel: data.channel
 			end
 
 			match /^coup-start$/ do |client, data|

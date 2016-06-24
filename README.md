@@ -92,9 +92,9 @@ Copyright© 2016 Eric Fields
 
 [Twitter](https://twitter.com/CptEric)
 
-[Email](ericfields09@gamil.com)
+[Email](mailto:ericfields09@gamil.com)
 
 This project is licensed under the [MIT license](LICENSE.md).
 
-Coup™ and all registered trademarks are owned by [Indie Boards and Games](http://www.indieboardsandcards.com/).
+Coup™ and all registered trademarks are owned by [Indie Boards and Cards](http://www.indieboardsandcards.com/).
 

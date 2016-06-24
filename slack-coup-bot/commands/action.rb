@@ -165,6 +165,8 @@ module SlackCoupBot
 
 				reaction = class_for_action(match[:reaction]).new(player, game.current_player_action)
 
+				reaction.validate
+
 				if game.executing?
 					raise CommandError, "You can no longer #{reaction} #{game.current_player_action.player}'s #{game.current_player_action}. #{game.current_action.player} must #{game.current_action}."
 				elsif game.current_player_action.nil?
@@ -172,8 +174,6 @@ module SlackCoupBot
 				elsif game.current_player_action == reaction
 					raise CommandError, "A #{game.current_player_action} has already been initiated"
 				end
-
-				reaction.validate
 
 				load_actions reaction
 

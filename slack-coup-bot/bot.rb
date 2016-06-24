@@ -17,8 +17,11 @@ require 'actions'
 require 'commands'
 require 'cards'
 
-
-SlackRubyBot::Client.logger.level = Logger::INFO
+if ENV['DEBUG_LOG'] && ENV['DEBUG_LOG'].downcase == 'true'
+	SlackRubyBot::Client.logger.level = Logger::DEBUG
+else
+	SlackRubyBot::Client.logger.level = Logger::INFO
+end
 
 module SlackCoupBot
 	class Bot < SlackRubyBot::Bot

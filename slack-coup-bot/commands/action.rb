@@ -1,9 +1,10 @@
 require 'commands/base'
-require 'actions/reactions'
+require 'actions/play_actions'
+require 'actions/sub_actions'
 
 module SlackCoupBot
 	module Commands
-		class Play < Base
+		class Action < Base
 
 			match /(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
@@ -39,6 +40,7 @@ module SlackCoupBot
 				# Push action along with subactions onto stack
 				load_actions action
 
+				sleep 0.3
 				client.say text: "#{player} will #{action}!", channel: data.channel
 
 				async do
@@ -50,6 +52,7 @@ module SlackCoupBot
 						should_do = countdown(action)
 
 						if should_do
+							sleep 0.3
 							client.say text: "#{player}'s #{action} will proceed!", channel: data.channel
 						end
 					end
@@ -112,7 +115,7 @@ module SlackCoupBot
 
 				load_actions action
 
-				sleep message_delay
+				sleep 0.3
 				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
 
 				async do
@@ -124,6 +127,7 @@ module SlackCoupBot
 						should_do = countdown(action)
 
 						if should_do
+							sleep 0.3
 							client.say text: "#{player}'s #{action} will proceed!", channel: data.channel
 						end
 					end
@@ -187,7 +191,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /(?<subaction>flip|return)( (?<cards>[\w\s]+))?/ do |client, data, match|
+			match /(?<subaction>flip|return)( (?<cards>[\w\s,]+))?/ do |client, data, match|
 				logger.info "Sub action requested: #{match[:subaction]}"
 
 				next if game.nil? || !game.started?
@@ -199,7 +203,7 @@ module SlackCoupBot
 					raise CommandError, "You must specify one or more cards to #{match[:subaction]}"
 				end
 
-				card_names = match[:cards].split(' ')
+				card_names = match[:cards].split(/[, <>]+/).reject{|n| n =~ /and|or/}
 				cards = card_names.collect do |card_name|
 					class_for_card(card_name).new
 				end
@@ -207,7 +211,7 @@ module SlackCoupBot
 				subaction = class_for_action(match[:subaction]).new(player, *cards)
 				if subaction != game.current_action
 					logger.info "Action #{subaction} does not match action #{game.current_action}"
-					raise CommandError, "Now is not the time to #{subaction}, #{player}"
+					raise CommandError, "Now is not the time for you to #{subaction}, #{player}"
 				end
 
 				subaction.validate *cards

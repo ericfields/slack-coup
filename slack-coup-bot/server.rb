@@ -1,7 +1,7 @@
 require 'state'
 
 module SlackCoupBot
-	class UserServer < SlackRubyBot::Server
+	class Server < SlackRubyBot::Server
 		extend State
 		on 'message' do |client, data|
 			if data.subtype == 'channel_join'

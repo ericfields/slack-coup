@@ -1,45 +1,7 @@
-require 'actions/play_actions'
+require 'actions/play_actions/reactions/reaction'
 
 module SlackCoupBot
 	module Actions
-
-		class Cancel
-			attr_reader :action
-			def initialize(action)
-				@action = action
-			end
-
-			def to_s
-				"cancellation"
-			end
-		end
-
-		class Reaction < TargetedAction
-			attr_reader :action
-
-			def initialize(player, action)
-				super(player, action.player)
-				@action = action
-			end
-
-			def public_message(result)
-				"#{player}'s #{self} succeeds!"
-			end
-
-			def evaluate(*args)
-				Cancel.new(action)
-			end
-		end
-
-		class Block < Reaction
-			def validate
-				super
-				if ! action.blockable?
-					raise ValidationError, "#{action} cannot be blocked."
-				end
-			end
-		end
-
 		class Challenge < Reaction
 			def subactions
 				[Flip.new(action.player, prompt: "#{player} has challenged your #{action} action, #{action.player}. You must flip a card by calling `flip <card>`.")]

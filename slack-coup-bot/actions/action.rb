@@ -1,5 +1,5 @@
 require 'actions/response'
-require 'cards'
+require 'errors'
 
 module SlackCoupBot
 	module Actions
@@ -19,12 +19,7 @@ module SlackCoupBot
 					new_actions)
 			end
 
-			def blockable?
-				! Cards::Card.blockers(self.class).empty?
-			end
-
-			def challengable?
-				! Cards::Card.actors(self.class).empty?
+			def validate
 			end
 
 			def do(*args)

@@ -5,7 +5,9 @@ SlackRubyBot.configure do |c|
 end
 
 require 'slack-ruby-bot'
-require 'user_server'
+require 'server'
+require 'patches'
+require 'errors'
 
 require 'game'
 require 'player'
@@ -14,9 +16,6 @@ require 'user'
 require 'actions'
 require 'commands'
 require 'cards'
-
-require 'errors'
-require 'patches'
 
 
 SlackRubyBot::Client.logger.level = Logger::INFO

@@ -2,7 +2,7 @@ require 'commands/base'
 
 module SlackCoupBot
 	module Commands
-		class GameSetup < Base
+		class Setup < Base
 			class << self
 				def open_lobby(client, channel, **game_options)
 					client.say text: "Loading the Coup lobby...", channel: channel

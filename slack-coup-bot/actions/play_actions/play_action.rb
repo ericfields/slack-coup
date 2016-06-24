@@ -13,12 +13,20 @@ module SlackCoupBot
 				[]
 			end
 
+			def actors
+				Cards::Card.actors(self.class)
+			end
+
+			def blockers
+				Cards::Card.blockers(self.class)
+			end
+
 			def blockable?
-				! Cards::Card.blockers(self.class).empty?
+				! blockers.empty?
 			end
 
 			def challengable?
-				! Cards::Card.actors(self.class).empty?
+				! actors.empty?
 			end
 
 			def public_message(result)

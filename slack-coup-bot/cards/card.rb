@@ -42,6 +42,10 @@ module SlackCoupBot
 			  	@action_classes.append Actions::Block
 			  	@block_classes ||= []
 			  end
+
+				def to_s
+					"`#{self.name.split('::').last}`"
+				end
 			end
 
 			def acts?(action)

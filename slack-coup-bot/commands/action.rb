@@ -43,11 +43,17 @@ module SlackCoupBot
 				sleep 0.3
 				client.say text: "#{player} will #{action}!", channel: data.channel
 
+				if action.challengable?
+					client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
+				end
+				if action.blockable?
+					client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!"
+				end
+
 				async do
 					should_do = true
 
 					if action.blockable? || action.challengable?
-						client.say text: "Waiting for reactions...", channel: data.channel
 
 						should_do = countdown(action)
 
@@ -118,11 +124,17 @@ module SlackCoupBot
 				sleep 0.3
 				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
 
+				if action.challengable?
+					client.say text: "Only the #{action.actors.or_join} can do this. #{target} can challenge with `challenge`!", channel: data.channel
+				end
+				if action.blockable?
+					client.say text: "Can be blocked by the #{action.blockers.or_join}. #{target} can block with `block`!", channel: data.channel
+				end
+
 				async do
 					should_do = true
 
 					if action.blockable? || action.challengable?
-						client.say text: "Waiting for reaction from #{target}...", channel: data.channel
 
 						should_do = countdown(action)
 
@@ -172,12 +184,16 @@ module SlackCoupBot
 
 				reaction.validate
 
-				sleep message_delay
+				sleep 0.3
 				client.say text: "#{player} will #{reaction}!", channel: data.channel
 
 				load_actions reaction
 
 				if reaction.challengable?
+
+					client.say text: "#{reaction.action} can only be blocked by a #{reaction.action.blockers}. #{reaction.player} can challenge with `challenge`!", channel: data.channel
+					
+
 					async do
 						if countdown(reaction)
 							execute_stack
@@ -354,7 +370,8 @@ module SlackCoupBot
 				end
 
 				def countdown(action)
-					logger.info "Waiting for #{action} for #{time_to_react} seconds"
+					logger.info "Waiting for reactions to #{action} for #{time_to_react} seconds"
+
 					wait_start = Time.now
 					begin
 						if game.current_player_action != action

@@ -47,7 +47,7 @@ module SlackCoupBot
 					client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 				end
 				if action.blockable?
-					client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!"
+					client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channe: data.channel
 				end
 
 				async do

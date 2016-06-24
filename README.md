@@ -1,6 +1,8 @@
 Slack Coup
 ==========
 
+![Coup](/images/coup.png)
+
 A bot that plays Coup in Slack.
 
 Coup is a board game of revolving around deception, calculation, and remaining the last player standing.

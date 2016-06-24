@@ -23,8 +23,8 @@ module SlackCoupBot
 
 				open_lobby(client, data.channel, self.debug_options)
 
-				User.all_users.sort_by{|u| u.name}.each do |user|
-					next if user.name == 'coup-bot'
+				max_players = self.debug_options[:max_players] || 6
+				User.all_users.select{|u| u.name != 'coup-bot'}.first(max_players).sort_by{|u| u.name}.each do |user|
 					game.add_player user
 				end
 
@@ -155,6 +155,7 @@ module SlackCoupBot
 				elsif ! game.started?
 					client.say text: "A lobby for Coup is currently open.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 				else
+					sleep 0.3
 					client.say text: "A game of Coup is under way.\n\nStatus:\n\n#{game.status}", channel: data.channel
 				end
 			end

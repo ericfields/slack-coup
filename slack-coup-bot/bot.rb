@@ -30,8 +30,10 @@ module SlackCoupBot
 		self.message_delay = 0.8
 
 		self.debug_options = {
+			min_players: 2,
+			max_players: 2,
 			coins_per_player: 7,
-			cards_per_player: 2,
+			cards_per_player: 1,
 			shuffle_deck: false, 
 			shuffle_players: false
 		}

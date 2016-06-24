@@ -16,7 +16,9 @@ module SlackCoupBot
 		attr_accessor :stack
 		attr_accessor :executing
 
-		def initialize(channel, 
+		def initialize(channel,
+			min_players: 4,
+			max_players: 6, 
 			coins_per_player: 2,
 			cards_per_player: 2,
 			shuffle_deck: true,
@@ -29,6 +31,8 @@ module SlackCoupBot
 			@stack = []
 			@executing = false
 
+			@min_players = min_players
+			@max_players = max_players
 			@coins_per_player = coins_per_player
 			@cards_per_player = cards_per_player
 			@shuffle_players = shuffle_players
@@ -46,8 +50,8 @@ module SlackCoupBot
 		end
 
 		def add_player(user)
-			if @players.count >= 6
-				raise CommandError, "Coup can only be played with a maximum of 6 players.\n\nCurrent players:\n\n#{player_list}"
+			if @players.count == @max_players
+				raise CommandError, "Coup can only be played with a maximum of #{@max_players} players.\n\nCurrent players:\n\n#{player_list}"
 			end
 			user = User.find(user) if user.is_a? String
 			@players[user.id] = Player.new(self, user)
@@ -89,8 +93,8 @@ module SlackCoupBot
 		end
 
 		def start
-			if @players.count < 4
-				raise CommandError, "Cannot start a game with less than 4 players"
+			if @players.count < @min_players
+				raise CommandError, "Cannot start a game with less than #{@min_players} players"
 			end
 			
 			@players.values.each do |player|

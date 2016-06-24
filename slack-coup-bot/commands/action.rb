@@ -405,7 +405,7 @@ module SlackCoupBot
 
 					if game.remaining_players == 1
 						winner = game.players.values.find{|p| ! p.eliminated? }
-						self.client.say text: "#{winner} has won the game!"
+						self.client.say text: "Congratulations, #{winner}, you won the game!", channel: self.channel
 						end_game
 					else
 						game.advance

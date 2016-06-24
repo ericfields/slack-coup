@@ -179,8 +179,8 @@ module SlackCoupBot
 
 				if reaction.challengable?
 					client.say text: "Only the #{reaction.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
-					client.say text: "#{game.next_player} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
-					@action_waiting = true
+					client.say text: "#{reaction.action.player} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
+					@approving_player = reaction.action.player
 				else
 					execute_stack
 					evaluate_game

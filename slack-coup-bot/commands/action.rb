@@ -430,14 +430,13 @@ module SlackCoupBot
 
 						@end_time = Time.now + self.time_to_react
 						time_left = @end_time - Time.now
-						client.say text: "#{time_left.ceil} seconds to respond.", channel: channel
 						wait_start = Time.now
 						notify_time = notify_at time_left
 
 						begin
 							time_left = @end_time - Time.now
-							if time_left <= notify_time
-								client.say text: "#{time_left.ceil} seconds left...", channel: channel
+							if time_left.ceil < notify_time
+								client.say text: "#{time_left.ceil} seconds left to respond...", channel: channel
 								notify_time = notify_at time_left
 							elsif @end_time > Time.now
 								# Time was reset, recalculate notify_time

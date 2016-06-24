@@ -11,6 +11,12 @@ module SlackCoupBot
 					self.channel = channel
 					self.game = Game.new(channel, game_options)
 					User.load_members(channel)
+
+					bot_info = client.web_client.auth_test
+					SlackRubyBot.configure do |c|
+						c.user = bot_info['user']
+						c.user_id = bot_info['user_id']
+					end
 				end
 			end
 
@@ -24,7 +30,7 @@ module SlackCoupBot
 				open_lobby(client, data.channel, self.debug_options)
 
 				max_players = self.debug_options[:max_players] || 6
-				User.all_users.select{|u| u.name != 'coup-bot'}.first(max_players).sort_by{|u| u.name}.each do |user|
+				User.all_users.select{|u| u.id != SlackRubyBot.config.user_id}.first(max_players).sort_by{|u| u.name}.each do |user|
 					game.add_player user
 				end
 

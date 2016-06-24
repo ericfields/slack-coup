@@ -28,7 +28,7 @@ Once the API token is generated, you can set it as an environment variable in th
 
 ### Development server
 
-Run `foreman start` to start a development server. You can also set the Slack API token upon starting the server by running `SLACK_API_TOKEN=<your-token-here> foreman start`.
+Run `foreman start` to start the bot. You can also set the Slack API token upon starting the server by running `SLACK_API_TOKEN=<your-token-here> foreman start`.
 
 ## Commands
 
@@ -41,6 +41,19 @@ Run `foreman start` to start a development server. You can also set the Slack AP
 * `coup-kick`		- Remove other players from the Coup lobby.
 * `coup-start`	- Start the game of Coup.
 * `coup-end`		- End the game of Coup.
+
+#### Debugging
+
+You can start a debugging session for the bot by calling `coup-debug`. This will begin an immediate game with as many players in the channel as are allowed.
+
+You can set the options for the debugging game as environment variables. It would be optimal to set these in the .env file in the root of the source directory. Available options are as follows:
+
+* MIN_PLAYERS				- Minimum number of players in a game. Default is 4.
+* MAX_PLAYERS				- Maximum number of players in a game. Default is 6.
+* COINS_PER_PLAYER	- Starting coins for each player. Default is 2.
+* CARDS_PER_PLAYER	- Starting number of cards for each player. Default is 2.
+* SHUFFLE_DECK			- *true* or *false* boolean for whether or not to shuffle the deck. Default is *false* for debugging.
+* SHUFFLE_PLAYERS		- *true* or *false* boolean for whether or not to shuffle the player order. Default is *false* for debugging.
 
 ### Gameplay
 

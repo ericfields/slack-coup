@@ -69,6 +69,11 @@ Blocks `assassinate`.
 
 Any player can perform any action, at any time. However, if that player does not have a card that supports the action, the player can lose a card if another player decides to `challenge` their action.
 
+You can check the status of the game as follows:
+
+* `status`			- View each player's number of coins, their revealed cards, and whether or not they are still in the game.
+* `cards`				- View your remaining (hidden) cards. You will be sent a direct message describing what cards you have. Can also say `check`.
+
 Once the game has started, the following actions Can only be performed:
 
 * `income`								- Take one coin from the treasury. Can be performed by anyone. Cannot be blocked or challenged.
@@ -79,14 +84,16 @@ Once the game has started, the following actions Can only be performed:
 * `assassinate <player>`	- Costs 3 coins. Force one player to flip a card. Can only be performed by an Assassin. Blocked by Contessa.
 * `coup`									- Costs 7 coins. Force one player to flip a card. Cannot be blocked. **Note**: When a player starts a turn with 10 or more coins, they must perform a coup.
 
-Additionally, the following reactions may be performed after another player performs an action:
+Once a player performs an action, a timer initiates. During this time, a player may react with the following commands:
 
 * `block`									- Block the previous action. Like all actions, any player can perform a block (if the action can be blocked). However, if the player does not have a card that is capable of blocking the action, that player may lose a card if another play decides to `challenge` their block.
 * `challenge`							- Challenge another player's action. Force a player to reveal a card. If that card is not capable of the action/block that the player has performed, that player loses the card. However, if that card can perform the action/block, the player who issued the challenge loses a card, and the challenged player exchanges the flipped card for a new one from the deck.
+* `wait`									- Delay the countdown timer by two minutes. This is helpful if players need time to think or discuss. You can react with `block` or `challenge` in this time, or type `proceed` to allow the player's action to go unchallenged.
+* `proceed`								- Cancel your `wait` command and allow the player's action to be performed immediately. Only the player who initiated the `wait` command can `proceed`.
 
 When these actions are performed, CoupBot may prompt the user to provide further input as follows:
 * `flip <card>`								- Flip and reveal a card.
-* `return <card1> (<card2>)`	- Return one or more cards to the deck.
+* `return <card1> (<card2>)`	- Return one or more cards to the deck. You can (and should) send this as a direct message to the bot, to prevent other players from knowing.
 
 ## Copyright/License
 

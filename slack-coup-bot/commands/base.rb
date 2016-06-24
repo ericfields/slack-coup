@@ -42,6 +42,9 @@ module SlackCoupBot
 						remaining_cards = player.cards.select{|c| ! c.flipped? }
 						whisper player.user.id, "You have the #{player.cards} card(s)"
 					end
+					client.say text: "A game of Coup has started!", channel: channel
+					client.say text: "Play order:\n#{game.player_list}", channel: channel
+					client.say text: "It is #{game.current_player}'s turn.", channel: channel
 				end
 
 				def end_game

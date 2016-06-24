@@ -29,8 +29,6 @@ module SlackCoupBot
 				end
 
 				start_game
-
-				client.say text: "A game of Coup has been started!\n\nPlayers:\n\n#{game.player_list}\n\nIt is #{game.current_player}'s turn.", channel: data.channel
 			end
 
 			match /^coup-lobby$/ do |client, data, match|
@@ -55,6 +53,8 @@ module SlackCoupBot
 				game.add_player data.user
 
 				client.say text: "A new lobby for a game of Coup has been opened.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
+				client.say text: "Join, leave, invite, or kick players with `coup-join`, `coup-leave`, `coup-invite`, `coup-kick`", channel: data.channel
+				client.say text: "Start the game with `coup-start`, or end the game and close the lobby with `coup-end`", channel: data.channel
 			end
 
 			match /^coup-start$/ do |client, data|
@@ -68,9 +68,6 @@ module SlackCoupBot
 				
 				else
 					start_game
-					
-					client.say text: "A game of Coup has started!", channel: data.channel
-					client.say text: "Play order:\n#{game.player_list}", channel: data.channel
 				end
 			end
 

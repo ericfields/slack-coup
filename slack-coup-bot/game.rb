@@ -134,6 +134,14 @@ module SlackCoupBot
 			@players.values.at @player_index
 		end
 
+		def next_player
+			next_index = @player_index
+			begin
+				next_index = (@player_index + 1) % @players.count
+			end while @players.values.at(next_index).eliminated?
+			@players.values.at next_index
+		end
+
 		def current_player_action
 			@stack.reverse.find{|action| action.is_a? Actions::PlayAction}
 		end

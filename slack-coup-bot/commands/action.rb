@@ -6,6 +6,23 @@ module SlackCoupBot
 	module Commands
 		class Action < Base
 
+			match /^ok(ay)?$/ do |client, data|
+				logger.info "Action approval requested"
+				next if @approving_player.nil?
+
+				player = get_player(data.user)
+				next if player.nil? || player.eliminated?
+
+				if player != @approving_player
+					raise CommandError, "Only #{@approving_player} can allow the action to proceed"
+				end
+
+				@approving_player = nil
+
+				execute_stack
+				evaluate_game
+			end
+
 			match /^(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
 
@@ -43,31 +60,18 @@ module SlackCoupBot
 				sleep 0.3
 				client.say text: "#{player} will #{action}!", channel: data.channel
 
-				if action.challengable?
-					client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
-				end
-				if action.blockable?
-					client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channe: data.channel
-				end
-
-				async do
-					should_do = true
-
-					if action.blockable? || action.challengable?
-
-						should_do = countdown(action)
-
-						if should_do
-							sleep 0.3
-							client.say text: "#{player}'s #{action} will proceed!", channel: data.channel
-						end
+				if action.blockable? || action.challengable?
+					if action.challengable?
+						client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 					end
-
-					if should_do
-						execute_stack
-
-						evaluate_game
+					if action.blockable?
+						client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channel: data.channel
 					end
+					client.say text: "#{game.next_player} can allow this action to proceed by typing `okay`", channel: data.channel
+					@approving_player = game.next_player
+				else
+					execute_stack
+					evaluate_game
 				end
 			end
 
@@ -124,31 +128,18 @@ module SlackCoupBot
 				sleep 0.3
 				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
 
-				if action.challengable?
-					client.say text: "Only the #{action.actors.or_join} can do this. #{target} can challenge with `challenge`!", channel: data.channel
-				end
-				if action.blockable?
-					client.say text: "Can be blocked by the #{action.blockers.or_join}. #{target} can block with `block`!", channel: data.channel
-				end
-
-				async do
-					should_do = true
-
-					if action.blockable? || action.challengable?
-
-						should_do = countdown(action)
-
-						if should_do
-							sleep 0.3
-							client.say text: "#{player}'s #{action} will proceed!", channel: data.channel
-						end
+				if action.blockable? || action.challengable?
+					if action.challengable?
+						client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 					end
-
-					if should_do
-						execute_stack
-
-						evaluate_game
+					if action.blockable?
+						client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channel: data.channel
 					end
+					client.say text: "#{action.target} can allow this action to proceed by typing `okay`", channel: data.channel
+					@approving_player = action.target
+				else
+					execute_stack
+					evaluate_game
 				end
 			end
 
@@ -184,23 +175,12 @@ module SlackCoupBot
 
 				reaction.validate
 
-				sleep 0.3
-				client.say text: "#{player} will #{reaction}!", channel: data.channel
-
 				load_actions reaction
 
 				if reaction.challengable?
-
-					client.say text: "#{reaction.action} can only be blocked by a #{reaction.action.blockers}. #{reaction.action.player} can challenge with `challenge`!", channel: data.channel
-					
-
-					async do
-						if countdown(reaction)
-							execute_stack
-
-							evaluate_game
-						end
-					end
+					client.say text: "Only the #{reaction.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
+					client.say text: "#{game.next_player} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
+					@action_waiting = true
 				else
 					execute_stack
 					evaluate_game
@@ -250,51 +230,12 @@ module SlackCoupBot
 				end
 			end
 
-			match /^wait/ do |client, data|
-				next if @end_time.nil? || @end_time < Time.now
-
-				player = get_player(data.user)
-				next if player.nil? || player.eliminated?
-
-				current_action = game.current_player_action
-				if player == current_action.player
-					client.say text: "Waiting on your own action? Hmmm, intriguing. I'll allow it.", channel: data.channel
-				end
-
-				if current_action.is_a?(Actions::TargetedAction) && player != current_action.target
-					client.say text: "Only #{current_action.target} can delay this action", channel: data.channel
-					next
-				end
-
-				if current_action.blockable? || current_action.challengable?
-					if @waiting_player
-						client.say text: "You cannot delay further. Make up your mind.", channel: data.channel
-						next
-					end
-
-					@end_time = Time.now + 120
-					@waiting_player = player
-					client.say text: "Allowing two minutes for for discussion.", channel: data.channel
-					client.say text: "When ready, enter your reaction (`block` or `challenge`), or simply type `proceed` to let the action complete.", channel: data.channel
-				end
-			end
-
-			match /^proceed/ do |client, data|
-				next if @waiting_player.nil?
-
-				player = get_player(data.user)
-				next if player.nil? || player.eliminated?
-
-				if player != @waiting_player
-					client.say text: "Only the player who initiated the wait, #{@waiting_player}, can choose to proceed", channel: data.channel
-					next
-				end
-
-				@end_time = Time.now
-			end
-
 			class << self
 				def execute_stack(user_input = nil)
+					if game.current_action.is_a? Actions::PlayAction
+						client.say text: "#{game.current_action.player}'s #{game.current_action} will proceed!", channel: channel
+					end
+
 					action_input = user_input
 					game.begin_execution
 
@@ -422,41 +363,6 @@ module SlackCoupBot
 					time_left = time_left.ceil
 					increment = [1, 5, 10, 15, 30, 60].reverse.select{|n| n < time_left}.min_by{|n| time_left / n}
 					increment * [1, (time_left / increment - 1)].max
-				end
-
-				def countdown(action)
-					should_proceed = true
-					begin
-						logger.info "Waiting for reactions to #{action} for #{time_to_react} seconds"
-
-						@end_time = Time.now + self.time_to_react
-						time_left = @end_time - Time.now
-						wait_start = Time.now
-						notify_time = notify_at time_left
-
-						client.say text: "#{time_left.ceil} seconds to respond. You can extend the timer with `wait`.", channel: data.channel
-
-						begin
-							time_left = @end_time - Time.now
-							if time_left.ceil <= notify_time
-								client.say text: "#{time_left.ceil} seconds left to respond...", channel: channel
-								notify_time = notify_at time_left
-							elsif @end_time < Time.now
-								# Time was reset, recalculate notify_time
-								notify_time = notify_at time_left
-							end
-
-							if game.current_player_action != action
-								logger.info "#{action.player}'s #{action} has been interrupted by #{game.current_player_action}"
-								should_proceed = false
-								break
-							end
-							sleep 0.1
-						end while Time.now < (@end_time || Time.at(0))
-						should_proceed
-					ensure
-						@waiting_player = nil
-					end
 				end
 
 				def get_player(user)

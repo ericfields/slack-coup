@@ -20,6 +20,11 @@ module SlackCoupBot
 				end
 			end
 
+
+			match /^(coup-)help$/ do |client, data|
+				client.say text: "Not yet implemented. Check out the README: https://github.com/ericfields/slack-coup/blob/master/README.md", channel: data.channel
+			end
+
 			match /^coup-debug$/ do |client, data, match|
 				logger.info "Received request to initiate debugging game"
 				if data.channel[0] == 'D'

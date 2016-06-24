@@ -6,7 +6,7 @@ module SlackCoupBot
 	module Commands
 		class Action < Base
 
-			match /(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
+			match /^(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
 
 				if data.channel[0] == 'D'
@@ -152,7 +152,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /(?<reaction>block|challenge)/ do |client, data, match|
+			match /^(?<reaction>block|challenge)/ do |client, data, match|
 				logger.info "Reaction requested: #{match[:reaction]}"
 				
 				if data.channel[0] == 'D'
@@ -207,8 +207,8 @@ module SlackCoupBot
 				end
 			end
 
-			match /(?<subaction>flip|return)( (?<cards>[\w\s,]+))?/ do |client, data, match|
-				logger.info "Sub action requested: #{match[:subaction]}"
+			match /^(?<subaction>flip|return)( (?<cards>[\w\s,]+))?/ do |client, data, match|
+				logger.info "Sub action requested: #{match[:subaction]} #{match[:cards]}"
 
 				next if game.nil? || !game.started?
 
@@ -219,7 +219,7 @@ module SlackCoupBot
 					raise CommandError, "You must specify one or more cards to #{match[:subaction]}"
 				end
 
-				card_names = match[:cards].split(/[, <>]+/).reject{|n| n =~ /and|or/}
+				card_names = match[:cards].split(/[, <>]+/).reject{|n| n =~ /^(and|or)$/}
 				cards = card_names.collect do |card_name|
 					class_for_card(card_name).new
 				end
@@ -237,7 +237,7 @@ module SlackCoupBot
 				evaluate_game
 			end
 
-			match /check|cards/ do |client, data|
+			match /^check|cards/ do |client, data|
 				logger.info "Card check action requested"
 
 				player = get_player(data.user)
@@ -248,6 +248,48 @@ module SlackCoupBot
 				else
 					whisper data.user, "You have the #{player.remaining_cards} card(s)"
 				end
+			end
+
+			match /^wait/ do |client, data|
+				next if @end_time.nil? || @end_time < Time.now
+
+				player = get_player(data.user)
+				next if player.nil? || player.eliminated?
+
+				current_action = game.current_player_action
+				if player == current_action.player
+					client.say text: "Waiting on your own action? Hmmm, intriguing. I'll allow it.", channel: data.channel
+				end
+
+				if current_action.is_a?(Actions::TargetedAction) && player != current_action.target
+					client.say text: "Only #{current_action.target} can delay this action", channel: data.channel
+					next
+				end
+
+				if current_action.blockable? || current_action.challengable?
+					if @waiting_player
+						client.say text: "You cannot delay further. Make up your mind.", channel: data.channel
+						next
+					end
+
+					@end_time = Time.now + 120
+					@waiting_player = player
+					client.say text: "Allowing two minutes for for discussion.", channel: data.channel
+					client.say text: "When ready, enter your reaction (`block` or `challenge`), or simply type `proceed` to let the action complete.", channel: data.channel
+				end
+			end
+
+			match /^proceed/ do |client, data|
+				next if @waiting_player.nil?
+
+				player = get_player(data.user)
+				next if player.nil? || player.eliminated?
+
+				if player != @waiting_player
+					client.say text: "Only the player who initiated the wait, #{@waiting_player}, can choose to proceed", channel: data.channel
+				end
+
+				@end_time = Time.now
 			end
 
 			class << self
@@ -261,6 +303,11 @@ module SlackCoupBot
 
 						# Check if action requires user input
 						if game.current_action.is_a? Actions::SubAction
+							if game.current_action.is_a?(Actions::Flip) && game.current_action.player.remaining_cards.count == 0
+								logger.info "#{game.current_action.player} has no more cards to flip. Removing flip from stack and moving on to next action."
+								game.stack.pop
+								next
+							end
 							if game.current_action.prompt
 								if user_input.nil?
 									logger.info "User input is required for #{game.current_action} action, notifying #{game.current_action.player}"
@@ -369,18 +416,45 @@ module SlackCoupBot
 					end
 				end
 
-				def countdown(action)
-					logger.info "Waiting for reactions to #{action} for #{time_to_react} seconds"
+				def notify_at time_left
+					return 0 if time_left <= 1
+					time_left = time_left.ceil
+					increment = [1, 5, 10, 15, 30, 60].reverse.select{|n| n < time_left}.min_by{|n| time_left / n}
+					increment * [1, (time_left / increment - 1)].max
+				end
 
-					wait_start = Time.now
+				def countdown(action)
+					should_proceed = true
 					begin
-						if game.current_player_action != action
-							logger.info "#{action.player}'s #{action} has been interrupted by #{game.current_player_action}"
-							return false
-						end
-						sleep 0.1
-					end while Time.now - wait_start < self.time_to_react
-					true
+						logger.info "Waiting for reactions to #{action} for #{time_to_react} seconds"
+
+						@end_time = Time.now + self.time_to_react
+						time_left = @end_time - Time.now
+						client.say text: "#{time_left.ceil} seconds to respond.", channel: channel
+						wait_start = Time.now
+						notify_time = notify_at time_left
+
+						begin
+							time_left = @end_time - Time.now
+							if time_left <= notify_time
+								client.say text: "#{time_left.ceil} seconds left...", channel: channel
+								notify_time = notify_at time_left
+							elsif @end_time > Time.now
+								# Time was reset, recalculate notify_time
+								notify_time = notify_at time_left
+							end
+
+							if game.current_player_action != action
+								logger.info "#{action.player}'s #{action} has been interrupted by #{game.current_player_action}"
+								should_proceed = false
+								break
+							end
+							sleep 0.1
+						end while Time.now < (@end_time || Time.at(0))
+						should_proceed
+					ensure
+						@waiting_player = nil
+					end
 				end
 
 				def get_player(user)

@@ -26,7 +26,7 @@ module SlackCoupBot
 
 		self.logger = SlackRubyBot::Client.logger
 
-		self.time_to_react = 10
+		self.time_to_react = 20
 		self.message_delay = 0.8
 
 		self.debug_options = {

@@ -4,7 +4,10 @@ module SlackCoupBot
 	module Actions
 		class Assassinate < TargetedAction
 			def subactions
-				[Flip.new(target, prompt: "#{player} has assassinated you, #{target}. You must flip a card by calling `flip <card>`.")]
+				[
+					LoseCoins.new(player, 3),
+					Flip.new(target, prompt: "#{player} has assassinated you, #{target}. You must flip a card by calling `flip <card>`.")
+				]
 			end
 
 			def validate

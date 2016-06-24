@@ -4,7 +4,10 @@ module SlackCoupBot
 	module Actions
 		class Coup < TargetedAction
 			def subactions
-				[Flip.new(target, prompt: "#{player} has couped you, #{target}. You must flip a card by calling `flip <card>`.")]
+				[
+					LoseCoins.new(player, 7),
+					Flip.new(target, prompt: "#{player} has couped you, #{target}. You must flip a card by calling `flip <card>`.")
+				]
 			end
 
 			def validate

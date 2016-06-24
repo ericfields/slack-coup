@@ -191,7 +191,7 @@ module SlackCoupBot
 
 				if reaction.challengable?
 
-					client.say text: "#{reaction.action} can only be blocked by a #{reaction.action.blockers}. #{reaction.player} can challenge with `challenge`!", channel: data.channel
+					client.say text: "#{reaction.action} can only be blocked by a #{reaction.action.blockers}. #{reaction.action.player} can challenge with `challenge`!", channel: data.channel
 					
 
 					async do
@@ -287,6 +287,7 @@ module SlackCoupBot
 
 				if player != @waiting_player
 					client.say text: "Only the player who initiated the wait, #{@waiting_player}, can choose to proceed", channel: data.channel
+					next
 				end
 
 				@end_time = Time.now
@@ -433,12 +434,14 @@ module SlackCoupBot
 						wait_start = Time.now
 						notify_time = notify_at time_left
 
+						client.say text: "#{time_left.ceil} seconds to respond. You can extend the timer with `wait`.", channel: data.channel
+
 						begin
 							time_left = @end_time - Time.now
-							if time_left.ceil < notify_time
+							if time_left.ceil <= notify_time
 								client.say text: "#{time_left.ceil} seconds left to respond...", channel: channel
 								notify_time = notify_at time_left
-							elsif @end_time > Time.now
+							elsif @end_time < Time.now
 								# Time was reset, recalculate notify_time
 								notify_time = notify_at time_left
 							end

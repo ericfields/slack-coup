@@ -160,6 +160,7 @@ module SlackCoupBot
 				else
 					sleep 0.3
 					client.say text: "A game of Coup is under way.\n\nStatus:\n\n#{game.status}", channel: data.channel
+					client.say text: "It is now #{game.current_player}'s turn to act.", channel: data.channel
 				end
 			end
 

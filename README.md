@@ -4,8 +4,7 @@ Slack Coup
 A bot that plays Coup in Slack.
 
 Coup is a board game of revolving around deception, calculation, and remaining the last player standing.
-Read more on the rules of Coup here:
-https://boardgamegeek.com/boardgame/131357/coup
+Read more on the rules of Coup [here](https://boardgamegeek.com/boardgame/131357/coup)
 
 This bot is built on top of the [slack-ruby-bot](https://github.com/dblock/slack-ruby-bot) library.
 
@@ -89,10 +88,13 @@ When these actions are performed, CoupBot may prompt the user to provide further
 
 ## Copyright/License
 
-Copyright (c) 2016 Eric Fields
+Copyright© 2016 Eric Fields
+
 [Twitter](https://twitter.com/CptEric)
+
 [Email](ericfields09@gamil.com)
 
 This project is licensed under the [MIT license](LICENSE.md).
 
+Coup™ and all registered trademarks are owned by [Indie Boards and Games](http://www.indieboardsandcards.com/).
 

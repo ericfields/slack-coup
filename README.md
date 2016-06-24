@@ -86,3 +86,13 @@ Additionally, the following reactions may be performed after another player perf
 When these actions are performed, CoupBot may prompt the user to provide further input as follows:
 * `flip <card>`								- Flip and reveal a card.
 * `return <card1> (<card2>)`	- Return one or more cards to the deck.
+
+## Copyright/License
+
+Copyright (c) 2016 Eric Fields
+[Twitter](https://twitter.com/CptEric)
+[Email](ericfields09@gamil.com)
+
+This project is licensed under the [MIT license](LICENSE.md).
+
+

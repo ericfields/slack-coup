@@ -11,6 +11,10 @@ module SlackCoupBot
 					prompt: "Waiting for #{player} to return #{cards_to_exchange} cards to the deck",
 					private_prompt: "Return #{cards_to_exchange} card(s) to the deck with `return #{cards_to_exchange > 1 ? '<card1> <card2>' : '<card>'}`")]
 			end
+
+			def desc
+				"#{to_s} cards"
+			end
 		end
 	end
 end

@@ -43,9 +43,9 @@ module SlackCoupBot
 		self.debug_options.each do |k, v|
 			new_val = ENV[k.to_s.upcase]
 			if new_val
-				if new_val == 'true'
+				if ['true', '1'].include? new_val.downcase
 					new_val = true
-				elsif new_val == 'false'
+				elsif ['false', '0'].include? new_val.downcase
 					new_val = false
 				elsif new_val.to_i.to_s == new_val
 					new_val = Integer(new_val)

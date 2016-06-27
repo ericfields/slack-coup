@@ -6,7 +6,7 @@ module SlackCoupBot
 	module Commands
 		class Action < Base
 
-			match /^ok(ay)?$/ do |client, data|
+			match /^o?k(ay)?$/i do |client, data|
 				logger.info "Action approval requested"
 				next if @approving_player.nil?
 
@@ -58,7 +58,7 @@ module SlackCoupBot
 				load_actions action
 
 				sleep 0.3
-				client.say text: "#{player} will #{action}!", channel: data.channel
+				client.say text: "#{player} will #{action.desc}!", channel: data.channel
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
@@ -126,7 +126,7 @@ module SlackCoupBot
 				load_actions action
 
 				sleep 0.3
-				client.say text: "#{player} will #{action} #{target}!", channel: data.channel
+				client.say text: "#{player} will #{action.desc} #{target}!", channel: data.channel
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
@@ -175,12 +175,14 @@ module SlackCoupBot
 					raise CommandError, "A #{game.current_player_action} has already been initiated"
 				end
 
+				client.say text: "#{player} will #{reaction} #{reaction.target}'s #{reaction.action}!", channel: data.channel
+
 				load_actions reaction
 
 				if reaction.challengable?
 					client.say text: "Only the #{reaction.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
-					client.say text: "#{reaction.action.player} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
-					@approving_player = reaction.action.player
+					client.say text: "#{reaction.target} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
+					@approving_player = reaction.target
 				else
 					execute_stack
 					evaluate_game
@@ -241,7 +243,6 @@ module SlackCoupBot
 
 					while ! game.stack.empty?
 						logger.info "Initiating execution flow: Current game stack: #{game.stack.show}"
-						sleep message_delay
 
 						# Check if action requires user input
 						if game.current_action.is_a? Actions::SubAction
@@ -294,6 +295,7 @@ module SlackCoupBot
 						end
 
 						print_response response
+						sleep message_delay
 
 						game.end_execution
 						true

@@ -7,8 +7,8 @@ module SlackCoupBot
 				[GainCoins.new(player, 1)]
 			end
 
-			def to_s
-				"take `income`"
+			def desc
+				"take #{to_s}"
 			end
 		end
 	end

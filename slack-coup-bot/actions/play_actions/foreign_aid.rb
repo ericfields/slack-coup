@@ -8,7 +8,11 @@ module SlackCoupBot
 			end
 
 			def to_s
-				"take `foreign aid`"
+				"`foreign aid`"
+			end
+
+			def desc
+				"take #{to_s}"
 			end
 		end
 	end

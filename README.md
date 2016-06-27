@@ -101,7 +101,7 @@ Once a player performs an action, other players can choose to react as follows:
 
 * `block`									- Block the previous action. Like all actions, any player can perform a block (if the action can be blocked). However, if the player does not have a card that is capable of blocking the action, that player may lose a card if another play decides to `challenge` their block.
 * `challenge`							- Challenge another player's action. Force a player to reveal a card. If that card is not capable of the action/block that the player has performed, that player loses the card. However, if that card can perform the action/block, the player who issued the challenge loses a card, and the challenged player exchanges the flipped card for a new one from the deck.
-* `okay`										- Allow the player's action to be performed. Only the next player in the turn order, or the player that is being targeted if it is a targeted action/reaction, can give the `okay`. Also aliased as `ok`.
+* `okay`										- Allow the player's action to be performed. Only the next player in the turn order, or the player that is being targeted if it is a targeted action/reaction, can give the `okay`. Also aliased as `ok`, or `k`.
 
 When these actions are performed, CoupBot may prompt the user to provide further input as follows:
 * `flip <card>`								- Flip and reveal a card.

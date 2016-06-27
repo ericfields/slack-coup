@@ -13,6 +13,10 @@ module SlackCoupBot
 					raise ValidationError, "You cannot steal from #{target} - they have no coins."
 				end
 			end
+
+			def desc
+				"#{to_s} from"
+			end
 		end
 	end
 end

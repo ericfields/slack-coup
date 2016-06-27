@@ -9,6 +9,7 @@ module SlackCoupBot
 			def initialize(player, action)
 				super(player, action.player)
 				@action = action
+				@target = action.player
 			end
 
 			def public_message(result)

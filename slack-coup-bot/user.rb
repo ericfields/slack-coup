@@ -9,9 +9,10 @@ module SlackCoupBot
 		attr_reader :name
 		attr_reader :dm_channel
 
-		def initialize(id, name)
+		def initialize(id, name, is_bot = false)
 			@id = id
 			@name = name
+			@is_bot = is_bot
 		end
 
 		class << self
@@ -49,7 +50,7 @@ module SlackCoupBot
 				load_client
 				user_response = @client.users_info(user: user_id)
 				user_info = user_response['user']
-				user = User.new(user_id, user_info['name'])
+				user = User.new(user_id, user_info['name'], user_info['is_bot'])
 				
 				@user_cache ||= {}
 				@user_cache[user_id] = user
@@ -64,6 +65,10 @@ module SlackCoupBot
 				@user_cache ||= {}
 				@user_cache.delete user_id
 			end
+		end
+
+		def is_bot?
+			@is_bot
 		end
 
 		def ==(other_user)

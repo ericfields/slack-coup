@@ -119,13 +119,16 @@ module SlackCoupBot
 				end
 			end
 
-			match /^coup-invite (?<players>(\w+(\s+)?)+)/ do |client, data, match|
+			match /^coup-invite (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
 				player_names.each do |player_name|
 					user = User.with_name(player_name)
 					if user.nil?
 						client.say text: "*#{player_name}* is not a member of the channel for the current game", channel: data.channel
+						next
+					elsif user.is_bot?
+						client.say text: "#{user} can't pass the Turing test!", channel: data.channel
 						next
 					end
 					player = game.add_player user.id
@@ -136,7 +139,7 @@ module SlackCoupBot
 
 			end
 
-			match /^coup-kick (?<players>(\w+(\s+)?)+)/ do |client, data, match|
+			match /^coup-kick (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
 				users = player_names.collect do |player_name|

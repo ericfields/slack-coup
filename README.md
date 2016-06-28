@@ -28,7 +28,7 @@ Once the API token is generated, you can set it as an environment variable in th
 
 ### Development server
 
-Run `foreman start` to start the bot. You can also set the Slack API token upon starting the server by running `SLACK_API_TOKEN=<your-token-here> foreman start`.
+Run `puma config.ru` to start the bot using the bundled Puma server. You can also set the Slack API token upon starting the server by running `SLACK_API_TOKEN=<your-token-here> puma config.ru`.
 
 ## Commands
 

@@ -69,5 +69,9 @@ module SlackCoupBot
 		def ==(other_user)
 			other_user.id == self.id
 		end
+
+		def to_s
+			"*#{@name}*"
+		end
 	end
 end

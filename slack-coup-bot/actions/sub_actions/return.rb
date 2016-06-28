@@ -34,7 +34,7 @@ module SlackCoupBot
 			end
 
 			def private_message(cards)
-				"You returned the #{cards} card(s) to the deck"
+				"You returned the #{cards} card(s) to the deck.\nYou now have the #{player.cards} cards"
 			end
 
 			def ==(other)

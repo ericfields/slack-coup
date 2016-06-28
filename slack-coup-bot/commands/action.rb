@@ -6,7 +6,7 @@ module SlackCoupBot
 	module Commands
 		class Action < Base
 
-			match /^o?k(ay)?$/i do |client, data|
+			match /^o?k(ay)?([!.\s])*$/i do |client, data|
 				logger.info "Action approval requested"
 				next if @approving_player.nil?
 
@@ -23,7 +23,7 @@ module SlackCoupBot
 				evaluate_game
 			end
 
-			match /^(?<action>income|tax|foreign aid|exchange)/ do |client, data, match|
+			match /^(?<action>income|tax|foreign aid|exchange)([!.\s])*$/i do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
 
 				if data.channel[0] == 'D'
@@ -75,7 +75,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^(?<action>steal|assassinate|coup)( (?<target>[\w-]+)?)?\s*$/ do |client, data, match|
+			match /^(?<action>steal|assassinate|coup)( (?<target>[\w-]+)?)?([!.\s])*$/i do |client, data, match|
 				logger.info "Aggressive action requested: #{match[:action]}"
 
 				if data.channel[0] == 'D'
@@ -143,7 +143,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^(?<reaction>block|challenge)/ do |client, data, match|
+			match /^(?<reaction>block|challenge)([!.\s])*$/i do |client, data, match|
 				logger.info "Reaction requested: #{match[:reaction]}"
 				
 				if data.channel[0] == 'D'
@@ -189,7 +189,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^(?<subaction>flip|return)( (?<cards>[\w\s,]+))?/ do |client, data, match|
+			match /^(?<subaction>flip|return)( (?<cards>[\w\s,]+))?([!.\s])*/i do |client, data, match|
 				logger.info "Sub action requested: #{match[:subaction]} #{match[:cards]}"
 
 				next if game.nil? || !game.started?
@@ -219,7 +219,7 @@ module SlackCoupBot
 				evaluate_game
 			end
 
-			match /^check|cards/ do |client, data|
+			match /^check|cards/i do |client, data|
 				logger.info "Card check action requested"
 
 				player = get_player(data.user)

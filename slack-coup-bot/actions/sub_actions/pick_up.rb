@@ -22,7 +22,7 @@ module SlackCoupBot
 			end
 
 			def private_message(cards)
-				"You picked up the #{cards} card(s)"
+				"You picked up the #{cards} card(s).\nYou now have the #{player.cards} card(s)"
 			end
 		end
 	end

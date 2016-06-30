@@ -12,8 +12,12 @@ module SlackCoupBot
 					private_prompt: "Return #{cards_to_exchange} card(s) to the deck with `return #{cards_to_exchange > 1 ? '<card1> <card2>' : '<card>'}`")]
 			end
 
-			def desc
+			def verb
 				"#{to_s} cards"
+			end
+
+			def info
+				"Draw new cards from the deck and keep the ones you want. " + super
 			end
 		end
 	end

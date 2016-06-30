@@ -19,6 +19,10 @@ module SlackCoupBot
 					raise ValidationError, "You cannot coup #{target} - they are out of the game."
 				end
 			end
+
+			def info
+				"Costs 7 coins. Target a player to lose a card." + super
+			end
 		end
 	end
 end

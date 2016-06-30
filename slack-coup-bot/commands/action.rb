@@ -23,6 +23,26 @@ module SlackCoupBot
 				evaluate_game
 			end
 
+			match /^info ?(?<thing>[\w\s]+)?/ do |client, data, match|
+				if match[:thing].nil?
+					client.say text: "You can get info on any card or action by typing `info <card/action>`", channel: data.channel
+					next
+				end
+				
+				begin
+					klass = class_for_card(match[:thing])
+				rescue CommandError
+					begin
+						klass = class_for_action(match[:thing])
+					rescue CommandError
+						client.say text: "No info on \"#{match[:thing]}\"", channel: data.channel
+						next
+					end
+				end
+
+				client.say text: "#{klass.info}", channel: data.channel
+			end
+
 			match /^(?<action>income|tax|foreign aid|exchange)([!.\s])*$/i do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
 
@@ -58,7 +78,7 @@ module SlackCoupBot
 				load_actions action
 
 				sleep 0.3
-				client.say text: "#{player} will #{action.desc}!", channel: data.channel
+				client.say text: "#{player} will #{action.verb}!", channel: data.channel
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
@@ -126,7 +146,7 @@ module SlackCoupBot
 				load_actions action
 
 				sleep 0.3
-				client.say text: "#{player} will #{action.desc} #{target}!", channel: data.channel
+				client.say text: "#{player} will #{action.verb} #{target}!", channel: data.channel
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
@@ -179,8 +199,8 @@ module SlackCoupBot
 
 				load_actions reaction
 
-				if reaction.challengable?
-					client.say text: "Only the #{reaction.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
+				if reaction.is_a? Actions::Block
+					client.say text: "Only the #{reaction.action.blockers.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 					client.say text: "#{reaction.target} can allow this #{reaction} to proceed by typing `okay`", channel: data.channel
 					@approving_player = reaction.target
 				else
@@ -387,7 +407,7 @@ module SlackCoupBot
 					begin
 						Object.const_get(action_name)
 					rescue NameError
-						raise InternalError, "#{action_name} does not map to a recognized class"
+						raise CommandError, "#{action_name} is not an action!"
 					end
 				end
 

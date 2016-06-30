@@ -37,6 +37,14 @@ module SlackCoupBot
 			    end
 			  end
 
+				def acts?(action)
+					self.actors(action).include? self
+				end
+
+				def blocks?(action)
+					self.blockers(action).include? self
+				end
+
 			  def load_actions
 			  	@action_classes ||= []
 			  	@action_classes.append Actions::Block
@@ -46,14 +54,17 @@ module SlackCoupBot
 				def to_s
 					"`#{self.name.split('::').last}`"
 				end
-			end
 
-			def acts?(action)
-				self.class.actors(action).include? self.class
-			end
-
-			def blocks?(action)
-				self.class.blockers(action).include? self.class
+				def info
+					detail_strs = []
+					if self.action_classes
+						detail_strs << "Can #{self.action_classes}."
+					end
+					if self.block_classes
+						detail_strs << "Blocks #{self.block_classes}."
+					end
+					detail_strs.join(' ')
+				end
 			end
 
 			def initialize
@@ -78,9 +89,7 @@ module SlackCoupBot
 				other.class == self.class
 			end
 
-			def to_s
-				"`#{self.class.name.split('::').last}`"
-			end
+			delegate :acts?, :blocks?, :to_s, :info, to: "self.class"
 		end
 	end
 end

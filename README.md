@@ -61,6 +61,8 @@ Each player starts the game with two coins and two cards. There are 5 classes of
 
 If a player is forced to flip their card, due to an `assassination`, losing a challenge, or a `coup`, they must flip a card. This card remains face up and visible to other players for the duration of the game. When both of a player's cards are flipped, that player is out of the game.
 
+You can get info on any card or action by typing `info <card/action>`.
+
 #### Cards
 
 ##### Ambassador

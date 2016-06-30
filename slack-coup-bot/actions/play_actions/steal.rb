@@ -14,8 +14,12 @@ module SlackCoupBot
 				end
 			end
 
-			def desc
+			def verb
 				"#{to_s} from"
+			end
+
+			def info
+				"Steal two coins from another player. " + super
 			end
 		end
 	end

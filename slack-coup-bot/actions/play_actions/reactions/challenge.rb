@@ -40,6 +40,13 @@ module SlackCoupBot
 
 				respond result: result, message: message, new_actions: new_actions
 			end
+
+			def self.info
+				"Challenge another player's action or block.\n" +
+				"You can challenge an action/block if you do not believe that player has the required card.\n" +
+				"The challenged a player must flip a card; if the card cannot perform the action, the player loses the card.\n" +
+				"If the card can perform the action however, you must flip a card, and the player exchanges their flipped card for a new one."
+			end
 		end
 	end
 end

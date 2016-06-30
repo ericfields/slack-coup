@@ -11,8 +11,12 @@ module SlackCoupBot
 				"`foreign aid`"
 			end
 
-			def desc
+			def verb
 				"take #{to_s}"
+			end
+
+			def info
+				"Take two coins from the treasury. " + super
 			end
 		end
 	end

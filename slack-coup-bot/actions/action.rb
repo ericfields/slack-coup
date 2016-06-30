@@ -35,17 +35,21 @@ module SlackCoupBot
 			def private_message(result)
 			end
 
-			def to_s
-				"`#{self.class.name.split('::').last.downcase}`"
-			end
-
-			def desc
-				to_s
-			end
-
 			def ==(other_action)
 				self.class == other_action.class
 			end
+
+			class << self
+				def to_s
+					"`#{self.name.split('::').last.downcase}`"
+				end
+
+				def verb
+					to_s
+				end
+			end
+
+			delegate :to_s, :verb, to: "self.class"
 		end
 	end
 end

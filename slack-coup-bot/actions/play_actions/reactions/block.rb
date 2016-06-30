@@ -14,6 +14,10 @@ module SlackCoupBot
 					raise ValidationError, "#{action} cannot be blocked."
 				end
 			end
+
+			def self.info
+				"Block another player's action. Any block can be challenged if a player does not believe you have the required card."
+			end
 		end
 	end
 end

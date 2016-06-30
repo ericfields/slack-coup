@@ -18,6 +18,12 @@ module SlackCoupBot
 			def ==(other)
 				other.class == self.class && other.player == player
 			end
+
+			class << self
+				def info
+					"#{self} is only performed as a response to another action."
+				end
+			end
 		end
 	end
 end

@@ -35,8 +35,10 @@ module SlackCoupBot
 				open_lobby(client, data.channel, self.debug_options)
 
 				max_players = self.debug_options[:max_players] || 6
-				User.all_users.select{|u| u.id != SlackRubyBot.config.user_id}.first(max_players).sort_by{|u| u.name}.each do |user|
+				User.all_users.sort_by{|u| u.name}.each do |user|
+					next if user.is_bot?
 					game.add_player user
+					break if game.players.count == max_players
 				end
 
 				start_game

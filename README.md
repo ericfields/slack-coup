@@ -26,9 +26,9 @@ Create a Slack bot user for your Slack team, with a generated API token. See [he
 
 Once the API token is generated, you can set it as an environment variable in the .env file at the root of the source directory. Simply create a file called .env with a single line, `SLACK_API_TOKEN=<your-token-here>`
 
-### Development server
+### Running the Bot
 
-Run `puma config.ru` to start the bot using the bundled Puma server. You can also set the Slack API token upon starting the server by running `SLACK_API_TOKEN=<your-token-here> puma config.ru`.
+Simply run `puma` in the project root to start the bot using the bundled Puma server. You can also set the Slack API token on the command line by running `SLACK_API_TOKEN=<your-token-here> puma` (note that a .env file will override this option).
 
 ## Commands
 

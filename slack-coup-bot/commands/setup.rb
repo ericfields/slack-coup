@@ -90,6 +90,11 @@ module SlackCoupBot
 					next
 				end
 
+				if game.started?
+					client.say text: "A game of Coup has already started. You cannot join.", channel: data.channel
+					next
+				end
+
 				if game.players == 6
 					client.say text: "You cannot join - there is already a maximum of 6 players in this game.", channel: data.channel
 					next
@@ -122,6 +127,15 @@ module SlackCoupBot
 			end
 
 			match /^coup-invite (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
+				if game.nil?
+					client.say text: "A lobby for Coup has not been opened. Open a lobby with `coup-lobby`.", channel: data.channel
+					next
+				end
+				if game.started?
+					client.say text: "A game of Coup is already under way. You cannot invite additional players.", channel: data.channel
+					next
+				end
+
 				player_names = match[:players].split ' '
 
 				player_names.each do |player_name|
@@ -131,6 +145,9 @@ module SlackCoupBot
 						next
 					elsif user.is_bot?
 						client.say text: "#{user} can't pass the Turing test!", channel: data.channel
+						next
+					elsif game.players[user.id]
+						client.say text: "#{user} is already in the game.", channel: data.channel
 						next
 					end
 					player = game.add_player user.id

@@ -6,7 +6,7 @@ module SlackCoupBot
 			class << self
 				def open_lobby(client, channel, **game_options)
 					client.say text: "Loading the Coup lobby...", channel: channel
-
+					logger.info "Game options: #{self.debug_options}"
 					self.client = client
 					self.channel = channel
 					self.game = Game.new(channel, game_options)
@@ -34,7 +34,7 @@ module SlackCoupBot
 
 				open_lobby(client, data.channel, self.debug_options)
 
-				max_players = self.debug_options[:max_players] || 6
+				max_players = self.debug_options[:max_players]
 				User.all_users.sort_by{|u| u.name}.each do |user|
 					next if user.is_bot?
 					game.add_player user

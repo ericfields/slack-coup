@@ -32,7 +32,7 @@ module SlackCoupBot
 		self.message_delay = 0.8
 
 		self.debug_options = {
-			min_players: 2,
+			min_players: 4,
 			max_players: 6,
 			coins_per_player: 2,
 			cards_per_player: 2,
@@ -43,9 +43,9 @@ module SlackCoupBot
 		self.debug_options.each do |k, v|
 			new_val = ENV[k.to_s.upcase]
 			if new_val
-				if ['true', '1'].include? new_val.downcase
+				if new_val.downcase == 'true'
 					new_val = true
-				elsif ['false', '0'].include? new_val.downcase
+				elsif new_val.downcase == 'false'
 					new_val = false
 				elsif new_val.to_i.to_s == new_val
 					new_val = Integer(new_val)

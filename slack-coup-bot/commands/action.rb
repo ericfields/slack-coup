@@ -239,7 +239,7 @@ module SlackCoupBot
 				evaluate_game
 			end
 
-			match /^check|cards/i do |client, data|
+			match /^(check|cards)$/i do |client, data|
 				logger.info "Card check action requested"
 
 				player = get_player(data.user)

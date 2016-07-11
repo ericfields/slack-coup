@@ -27,6 +27,23 @@ module SlackCoupBot
 	class Bot < SlackRubyBot::Bot
 		extend State
 
+    help do
+      title 'Slack Coup Bot'
+      desc 'Plays a game of Coup'
+
+      command 'coup-lobby' do
+      	desc "Open a lobby for a game of Coup"
+      end
+
+      command 'coup-join' do
+      	desc "Join an open Coup lobby"
+      end
+
+      command 'coup-leave' do
+      	desc "Leave a Coup game or lobby"
+      end
+    end
+
 		self.logger = SlackRubyBot::Client.logger
 
 		self.message_delay = 0.8

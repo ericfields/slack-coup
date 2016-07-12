@@ -5,13 +5,10 @@ module SlackCoupBot
 		class Card
 			include SlackCoupBot::Actions
 
-			@@card_classes = nil
+			@@members = nil
 
 			class << self
-				attr_accessor :action_classes
-				attr_accessor :block_classes
-
-				def actions(*actions)
+				def performs(*actions)
 					@action_classes = actions
 				end
 
@@ -19,49 +16,47 @@ module SlackCoupBot
 					@block_classes = actions
 				end
 
-			  def actors(action)
+				def members
+			    @members ||= ObjectSpace.each_object(singleton_class).select { |klass| klass < self }
+				end
+
+			  def performers(action)
 			  	action = action.class unless action.is_a? Class
-			    @@card_classes ||= ObjectSpace.each_object(singleton_class).select { |klass| klass < self }
-			    @@card_classes.select do |klass|
-			    	klass.load_actions
-			    	klass.action_classes.include? action
+			    members.select do |card|
+			    	card.performs? action
 			    end
 			  end
 
 			  def blockers(action)
 			  	action = action.class unless action.is_a? Class
-			    @@card_classes ||= ObjectSpace.each_object(singleton_class).select { |klass| klass < self }
-			    @@card_classes.select do |klass|
-			    	klass.load_actions
-			    	klass.block_classes.include? action
+			    members.select do |card|
+			    	card.blocks? action
 			    end
 			  end
 
-				def acts?(action)
-					self.actors(action).include? self
+				def performs?(action)
+					action = action.class unless action.is_a? Class
+					@action_classes ||= []
+					@action_classes.include? action
 				end
 
 				def blocks?(action)
-					self.blockers(action).include? self
+					action = action.class unless action.is_a? Class
+					@block_classes ||= []
+					@block_classes.include? action
 				end
-
-			  def load_actions
-			  	@action_classes ||= []
-			  	@action_classes.append Actions::Block
-			  	@block_classes ||= []
-			  end
 
 				def to_s
 					"`#{self.name.split('::').last}`"
 				end
 
-				def info
+				def desc
 					detail_strs = []
-					if self.action_classes
-						detail_strs << "Can #{self.action_classes}."
+					if !@action_classes.blank?
+						detail_strs << "Can #{@action_classes}."
 					end
-					if self.block_classes
-						detail_strs << "Blocks #{self.block_classes}."
+					if !@block_classes.blank?
+						detail_strs << "Blocks #{@block_classes}."
 					end
 					detail_strs.join(' ')
 				end
@@ -89,7 +84,7 @@ module SlackCoupBot
 				other.class == self.class
 			end
 
-			delegate :acts?, :blocks?, :to_s, :info, to: "self.class"
+			delegate :performs?, :blocks?, :to_s, :info, to: "self.class"
 		end
 	end
 end

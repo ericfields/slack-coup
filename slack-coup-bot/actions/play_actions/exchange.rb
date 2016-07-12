@@ -16,8 +16,8 @@ module SlackCoupBot
 				"#{to_s} cards"
 			end
 
-			def info
-				"Draw new cards from the deck and keep the ones you want. " + super
+			def self.desc
+				"Replace all of your hidden cards with new ones."
 			end
 		end
 	end

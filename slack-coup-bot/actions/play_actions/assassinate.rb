@@ -20,8 +20,8 @@ module SlackCoupBot
 				end
 			end
 
-			def info
-				"Costs 3 coins. Target a player to lose a card. " + super
+			def self.desc
+				"Costs 3 coins. Target a player to lose a card. "
 			end
 		end
 	end

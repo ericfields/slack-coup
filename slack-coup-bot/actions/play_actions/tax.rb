@@ -7,8 +7,8 @@ module SlackCoupBot
 				[GainCoins.new(player, 3)]
 			end
 
-			def info
-				"Tale three coins from the treasury. " + super
+			def self.desc
+				"Take three coins from the treasury."
 			end
 		end
 	end

@@ -40,8 +40,14 @@ module SlackCoupBot
 			end
 
 			class << self
+				def members
+			    @members ||= ObjectSpace.each_object(singleton_class).select do |klass| 
+			    	klass < self && ObjectSpace.each_object(singleton_class).select{|subklass| subklass < klass}.empty?
+			    end
+				end
+
 				def to_s
-					"`#{self.name.split('::').last.downcase}`"
+					"`#{self.name.split('::').last.split(/(?=[A-Z])/).join(' ').downcase}`"
 				end
 
 				def verb

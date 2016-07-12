@@ -19,7 +19,7 @@ module SlackCoupBot
 					if card.blocks?(action.action)
 						return false
 					end
-				elsif card.acts?(action)
+				elsif card.performs?(action)
 					return false
 				end
 				true
@@ -41,7 +41,11 @@ module SlackCoupBot
 				respond result: result, message: message, new_actions: new_actions
 			end
 
-			def self.info
+			def self.desc
+				"Challenge another player's action."
+			end
+
+			def self.long_desc
 				"Challenge another player's action or block.\n" +
 				"You can challenge an action/block if you do not believe that player has the required card.\n" +
 				"The challenged a player must flip a card; if the card cannot perform the action, the player loses the card.\n" +

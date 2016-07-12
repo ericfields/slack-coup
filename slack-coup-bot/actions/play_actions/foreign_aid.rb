@@ -15,8 +15,8 @@ module SlackCoupBot
 				"take #{to_s}"
 			end
 
-			def info
-				"Take two coins from the treasury. " + super
+			def self.desc
+				"Take two coins from the treasury."
 			end
 		end
 	end

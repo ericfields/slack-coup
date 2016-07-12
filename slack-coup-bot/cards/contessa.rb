@@ -3,7 +3,7 @@ require 'cards/card'
 module SlackCoupBot
 	module Cards
 		class Contessa < Card
-			blocks Assassinate
+			performs Assassinate
 		end
 	end
 end

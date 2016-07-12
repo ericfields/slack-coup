@@ -3,7 +3,7 @@ require 'cards/card'
 module SlackCoupBot
 	module Cards
 		class Duke < Card
-			actions Tax
+			performs Tax
 			blocks ForeignAid
 		end
 	end

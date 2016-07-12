@@ -27,22 +27,62 @@ module SlackCoupBot
 	class Bot < SlackRubyBot::Bot
 		extend State
 
-    help do
-      title 'Slack Coup Bot'
-      desc 'Plays a game of Coup'
+      help do
+        title 'Slack Coup Bot'
+        desc 'Plays a game of Coup'
 
-      command 'coup-lobby' do
-      	desc "Open a lobby for a game of Coup"
-      end
+        command 'coup-lobby' do
+          desc "Open a lobby for a game of Coup"
+          long_desc "Players can join an open Coup lobby with *coup-join*.\n" +
+          "4-6 players are required for Coup.\n"
+          + "Any player can start the game with *coup-start*"
+        end
 
-      command 'coup-join' do
-      	desc "Join an open Coup lobby"
-      end
+        command 'coup-start' do
+          desc "Start the game"
+          long_desc "Start a game of Coup. A lobby must be open with at least four players to start the game"
+        end
 
-      command 'coup-leave' do
-      	desc "Leave a Coup game or lobby"
+        command 'coup-join' do
+          desc "Join a lobby"
+          long_desc "Join an open Coup lobby. No more than six players can be present in a game"
+        end
+
+        command 'coup-leave' do
+          desc "Leave a game/lobby"
+          long_desc "Leave a Coup game or lobby"
+        end
+
+        command 'coup-invite' do
+          desc "Invite players to a lobby"
+          long_desc "Invite one or more players to an open lobby. Example: `coup-invite <player1> <player2>...`"
+        end
+
+        command 'coup-kick' do
+          desc "Remove players from a lobby/game"
+          long_desc "Remove one or more players from a lobby or game. Example: `coup-kick <player1> <player2>...`"
+        end
+
+        command 'coup-end' do
+          desc "End the game"
+          long_desc "End an active game of Coup, or close a lobby"
+        end
+
+        SlackCoupBot::Actions::PlayAction.members.reverse.collect do |klass|
+          command_name = klass.name.to_s.split('::').last.split(/(?=[A-Z])/).join(' ').downcase
+          command command_name, :actions do
+            desc klass.desc
+          	long_desc klass.long_desc
+          end
+        end
+
+        SlackCoupBot::Cards::Card.members.reverse.collect do |klass|
+          command_name = klass.name.to_s.split('::').last.split(/(?=[A-Z])/).join(' ')
+          command command_name, :cards do
+            desc klass.desc
+          end
+        end
       end
-    end
 
 		self.logger = SlackRubyBot::Client.logger
 

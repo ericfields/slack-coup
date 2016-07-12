@@ -15,8 +15,11 @@ module SlackCoupBot
 				end
 			end
 
-			def self.info
-				"Block another player's action. Any block can be challenged if a player does not believe you have the required card."
+			def self.desc
+				"Block another player's action."
+			end
+			def self.long_desc
+				"Block the most recent action. Any block can be challenged if a player does not believe you have the required card."
 			end
 		end
 	end

@@ -23,26 +23,6 @@ module SlackCoupBot
 				evaluate_game
 			end
 
-			match /^info ?(?<thing>[\w\s]+)?/ do |client, data, match|
-				if match[:thing].nil?
-					client.say text: "You can get info on any card or action by typing `info <card/action>`", channel: data.channel
-					next
-				end
-				
-				begin
-					klass = class_for_card(match[:thing])
-				rescue CommandError
-					begin
-						klass = class_for_action(match[:thing])
-					rescue CommandError
-						client.say text: "No info on \"#{match[:thing]}\"", channel: data.channel
-						next
-					end
-				end
-
-				client.say text: "#{klass.info}", channel: data.channel
-			end
-
 			match /^(?<action>income|tax|foreign aid|exchange)([!.\s])*$/i do |client, data, match|
 				logger.info "Passive action requested: #{match[:action]}"
 
@@ -82,7 +62,7 @@ module SlackCoupBot
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
-						client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
+						client.say text: "Only the #{action.performers.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 					end
 					if action.blockable?
 						client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channel: data.channel
@@ -150,7 +130,7 @@ module SlackCoupBot
 
 				if action.blockable? || action.challengable?
 					if action.challengable?
-						client.say text: "Only the #{action.actors.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
+						client.say text: "Only the #{action.performers.or_join} can do this. Players can challenge with `challenge`!", channel: data.channel
 					end
 					if action.blockable?
 						client.say text: "Can be blocked by the #{action.blockers.or_join}. Players can block with `block`!", channel: data.channel

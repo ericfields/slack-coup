@@ -3,7 +3,7 @@ require 'cards/card'
 module SlackCoupBot
 	module Cards
 		class Ambassador < Card
-			actions Exchange
+			performs Exchange
 			blocks Steal
 		end
 	end

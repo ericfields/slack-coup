@@ -20,7 +20,7 @@ module SlackCoupBot
 			end
 
 			class << self
-				def info
+				def desc
 					"#{self} is only performed as a response to another action."
 				end
 			end

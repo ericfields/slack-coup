@@ -18,8 +18,8 @@ module SlackCoupBot
 				"#{to_s} from"
 			end
 
-			def info
-				"Steal two coins from another player. " + super
+			def self.desc
+				"Steal two coins from another player."
 			end
 		end
 	end

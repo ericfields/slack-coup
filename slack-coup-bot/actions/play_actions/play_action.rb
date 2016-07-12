@@ -18,8 +18,8 @@ module SlackCoupBot
 			end
 
 			class << self
-				def actors
-					Cards::Card.actors(self)
+				def performers
+					Cards::Card.performers(self)
 				end
 
 				def blockers
@@ -31,25 +31,29 @@ module SlackCoupBot
 				end
 
 				def challengable?
-					! actors.empty?
+					! performers.empty?
 				end
 
-				def info
-					info_strs = []
-					if actors.any?
-						info_strs << "Can be performed by #{actors}."
+				def desc
+					""
+				end
+
+				def long_desc
+					desc_strs = [desc]
+					if performers.any?
+						desc_strs << "Can be performed by #{performers}."
 					end
 					if blockers.any?
-						info_strs << "Blocked by #{blockers}."
+						desc_strs << "Blocked by #{blockers}."
 					end
-					if info_strs.empty?
-						info_strs << "Cannot be blocked or challenged."
+					if desc_strs.size == 1
+						desc_strs << "Cannot be blocked or challenged."
 					end
-					info_strs.join(' ')
+					desc_strs.join(' ')
 				end
 			end
 
-			delegate :actors, :blockers, :blockable?, :challengable?, :info, to: "self.class"
+			delegate :performers, :blockers, :blockable?, :challengable?, :desc, to: "self.class"
 		end
 	end
 end

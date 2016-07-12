@@ -34,17 +34,17 @@ Simply run `puma` in the project root to start the bot using the bundled Puma se
 
 ### Game setup
 
-* `coup-lobby`	- Create a lobby for a game of Coup. Players can join the lobby using *coup-join*
-* `coup-join`  	- Join an open Coup lobby.
-* `coup-invite`	- Invite other players to a Coup lobby.
-* `coup-leave`	- Leave the Coup lobby.
-* `coup-kick`		- Remove other players from the Coup lobby.
-* `coup-start`	- Start the game of Coup.
-* `coup-end`		- End the game of Coup.
+* `game lobby`	- Create a lobby for a game of Coup. Players can join the lobby using *game join*
+* `game join`  	- Join an open Coup lobby.
+* `game invite`	- Invite other players to a Coup lobby.
+* `game leave`	- Leave the Coup lobby.
+* `game kick`		- Remove other players from the Coup lobby.
+* `game start`	- Start the game of Coup.
+* `game end`		- End the game of Coup.
 
 #### Debugging
 
-You can start a debugging session for the bot by calling `coup-debug`. This will begin an immediate game with as many players in the channel as are allowed.
+You can start a debugging session for the bot by calling `game debug`. This will begin an immediate game with as many players in the channel as are allowed.
 
 You can set the options for the debugging game as environment variables. It would be optimal to set these in the .env file in the root of the source directory. Available options are as follows:
 

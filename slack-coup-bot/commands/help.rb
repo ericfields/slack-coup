@@ -55,7 +55,7 @@ module SlackRubyBot
     class HelpCommand < Base
 
       # Refactoring 'help' command to respond to non-direct messages
-      match /^(coup-)?help( (?<subject>\w+([-\s]\w+)?))?$/ do |client, data, match|
+      match /^(game )?help( (?<subject>\w+([-\s]\w+)?))?$/i do |client, data, match|
         command = match[:subject]
 
         text = if command.present?

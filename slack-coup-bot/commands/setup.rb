@@ -20,7 +20,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^coup-debug$/ do |client, data, match|
+			match /^game debug$/ do |client, data, match|
 				logger.info "Received request to initiate debugging game"
 				if data.channel[0] == 'D'
 					raise CommandError, "Can't debug - you're in a direct message channel"
@@ -39,7 +39,7 @@ module SlackCoupBot
 				start_game
 			end
 
-			match /^coup-lobby$/ do |client, data, match|
+			match /^game lobby$/ do |client, data, match|
 				logger.info "Received request to open a coup lobby"
 
 				if data.channel[0] == 'D'
@@ -61,11 +61,11 @@ module SlackCoupBot
 				game.add_player data.user
 
 				client.say text: "A new lobby for a game of Coup has been opened.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
-				client.say text: "You can join, leave, invite, or kick players with `coup-join`, `coup-leave`, `coup-invite`, `coup-kick`", channel: data.channel
-				client.say text: "You can start the game with `coup-start`, or end the game and close the lobby with `coup-end`", channel: data.channel
+				client.say text: "You can join, leave, invite, or kick players with `game join`, `game leave`, `game invite`, `game kick`", channel: data.channel
+				client.say text: "You can start the game with `game start`, or end the game and close the lobby with `game end`", channel: data.channel
 			end
 
-			match /^coup-start$/ do |client, data|
+			match /^game start$/ do |client, data|
 				logger.info "Received request to start game"
 				if game.nil?
 					client.say text: "No Coup lobby has been opened", channel: data.channel
@@ -79,7 +79,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^coup-join$/ do |client, data|
+			match /^game join$/ do |client, data|
 				if game.nil?
 					client.say text: "No game has been started. Start a new game of Coup by typing 'lobby'.", channel: data.channel
 					next
@@ -105,7 +105,7 @@ module SlackCoupBot
 				client.say text: "#{player} has joined the game.\n\nPlayers:\n\n#{game.player_list}", channel: data.channel
 			end
 
-			match /^coup-leave$/ do |client, data|
+			match /^game leave$/ do |client, data|
 				next if game.nil?
 
 				removed_player = game.remove_player data.user
@@ -121,9 +121,9 @@ module SlackCoupBot
 				end
 			end
 
-			match /^coup-invite (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
+			match /^game invite (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
 				if game.nil?
-					client.say text: "A lobby for Coup has not been opened. Open a lobby with `coup-lobby`.", channel: data.channel
+					client.say text: "A lobby for Coup has not been opened. Open a lobby with `game lobby`.", channel: data.channel
 					next
 				end
 				if game.started?
@@ -153,7 +153,7 @@ module SlackCoupBot
 
 			end
 
-			match /^coup-kick (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
+			match /^game kick (?<players>([\w_-]+(\s+)?)+)/ do |client, data, match|
 				player_names = match[:players].split ' '
 
 				users = player_names.collect do |player_name|
@@ -186,7 +186,7 @@ module SlackCoupBot
 				end
 			end
 
-			match /^coup-end/ do |client, data|
+			match /^game end/ do |client, data|
 				next if game.nil?
 
 				end_game

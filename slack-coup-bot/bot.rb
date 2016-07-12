@@ -31,39 +31,39 @@ module SlackCoupBot
         title 'Slack Coup Bot'
         desc 'Plays a game of Coup'
 
-        command 'coup-lobby' do
+        command 'game lobby' do
           desc "Open a lobby for a game of Coup"
-          long_desc "Players can join an open Coup lobby with *coup-join*.\n" +
+          long_desc "Players can join an open Coup lobby with *game join*.\n" +
           "4-6 players are required for Coup.\n"
-          + "Any player can start the game with *coup-start*"
+          + "Any player can start the game with *game start*"
         end
 
-        command 'coup-start' do
+        command 'game start' do
           desc "Start the game"
           long_desc "Start a game of Coup. A lobby must be open with at least four players to start the game"
         end
 
-        command 'coup-join' do
+        command 'game join' do
           desc "Join a lobby"
           long_desc "Join an open Coup lobby. No more than six players can be present in a game"
         end
 
-        command 'coup-leave' do
+        command 'game leave' do
           desc "Leave a game/lobby"
           long_desc "Leave a Coup game or lobby"
         end
 
-        command 'coup-invite' do
+        command 'game invite' do
           desc "Invite players to a lobby"
-          long_desc "Invite one or more players to an open lobby. Example: `coup-invite <player1> <player2>...`"
+          long_desc "Invite one or more players to an open lobby. Example: `game invite <player1> <player2>...`"
         end
 
-        command 'coup-kick' do
+        command 'game kick' do
           desc "Remove players from a lobby/game"
-          long_desc "Remove one or more players from a lobby or game. Example: `coup-kick <player1> <player2>...`"
+          long_desc "Remove one or more players from a lobby or game. Example: `game kick <player1> <player2>...`"
         end
 
-        command 'coup-end' do
+        command 'game end' do
           desc "End the game"
           long_desc "End an active game of Coup, or close a lobby"
         end

@@ -68,6 +68,16 @@ module SlackCoupBot
           long_desc "End an active game of Coup, or close a lobby"
         end
 
+        command 'cards' do
+          desc "View your cards"
+          long_desc "View the cards in your hand. Sent as a private message."
+        end
+
+        command 'status' do
+          desc "Show the game status"
+          long_desc "Display the current status of all players, with their current coins and revealed cards"
+        end
+
         SlackCoupBot::Actions::PlayAction.members.reverse.collect do |klass|
           command_name = klass.name.to_s.split('::').last.split(/(?=[A-Z])/).join(' ').downcase
           command command_name, :actions do

@@ -81,7 +81,7 @@ module SlackCoupBot
 
 			match /^game join$/ do |client, data|
 				if game.nil?
-					client.say text: "No game has been started. Start a new game of Coup by typing 'lobby'.", channel: data.channel
+					client.say text: "No game has been started. Start a new game of Coup with `game lobby`.", channel: data.channel
 					next
 				end
 
